@@ -11,6 +11,8 @@ import java.util.Optional;
 public interface IssueService {
     Issue getIssueById(Long issueId) throws Exception;
 
+    List<Issue> getIssuesByUserId(User user) throws Exception;
+
     List<Issue> getIssueByProjectId(Long projectId) throws Exception;
 
     Issue createIssue(IssueRequest issue, User user) throws Exception;

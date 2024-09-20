@@ -5,6 +5,7 @@ import com.TaiNguyen.ProjectManagementSystems.Modal.Invitation;
 import com.TaiNguyen.ProjectManagementSystems.Modal.Project;
 import com.TaiNguyen.ProjectManagementSystems.Modal.User;
 import com.TaiNguyen.ProjectManagementSystems.repository.InviteRequest;
+import com.TaiNguyen.ProjectManagementSystems.response.ErrorResponse;
 import com.TaiNguyen.ProjectManagementSystems.response.MessageResponse;
 import com.TaiNguyen.ProjectManagementSystems.service.InvitationService;
 import com.TaiNguyen.ProjectManagementSystems.service.ProjectService;
@@ -38,7 +39,20 @@ public class ProjectController {
         {
             User user = userService.findUserProfileByJwt(jwt);
             List<Project> projects= projectService.getProjectByTeam(user, category, tag);
+
             return new ResponseEntity<>(projects, HttpStatus.OK);
+        }
+    }
+    @PostMapping()
+    public ResponseEntity<Project>createProject(
+
+            @RequestHeader("Authorization") String jwt,
+            @RequestBody Project project
+    ) throws Exception {
+        {
+            User user = userService.findUserProfileByJwt(jwt);
+            Project createdProject= projectService.createProject(project, user);
+            return new ResponseEntity<>(createdProject, HttpStatus.OK);
         }
     }
 
@@ -54,18 +68,7 @@ public class ProjectController {
         }
     }
 
-    @PostMapping()
-    public ResponseEntity<Project>createProject(
 
-            @RequestHeader("Authorization") String jwt,
-            @RequestBody Project project
-    ) throws Exception {
-        {
-            User user = userService.findUserProfileByJwt(jwt);
-            Project createdProject= projectService.createProject(project, user);
-            return new ResponseEntity<>(createdProject, HttpStatus.OK);
-        }
-    }
 
     @PatchMapping("/{projectId}")
     public ResponseEntity<Project>updateProject(
@@ -89,7 +92,7 @@ public class ProjectController {
         {
             User user = userService.findUserProfileByJwt(jwt);
             projectService.deleteProject(projectId, user.getId());
-            MessageResponse res = new MessageResponse("project deleted successfully");
+            MessageResponse res = new MessageResponse("Xoá thành công dự án");
             return new ResponseEntity<>(res, HttpStatus.OK);
         }
     }
@@ -119,31 +122,33 @@ public class ProjectController {
         }
     }
 
-    @GetMapping("/invite")
+    @PostMapping("/invite")
     public ResponseEntity<MessageResponse>inviteProject(
             @RequestBody InviteRequest req,
-            @RequestHeader("Authorization") String jwt,
-            @RequestBody Project project
+            @RequestHeader("Authorization") String jwt
     ) throws Exception {
         {
-            User user = userService.findUserProfileByJwt(jwt);
-            invitationService.sendInvitation(req.getEmail(), req.getProjectId());
-            MessageResponse res = new MessageResponse("User invitation sent");
+            User user = userService.findUserByEmail(req.getEmail());
+            Project project = projectService.getProjectById(req.getProjectId());
+            if(user == null){
+                MessageResponse error = new MessageResponse("Người dùng không tồn tại trong hệ thống");
+                return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+            }
+            invitationService.sendInvitation(req.getEmail(), req.getProjectId(), project.getName());
+            MessageResponse res = new MessageResponse("Đã gửi mail yêu cầu tham gia dự án");
             return new ResponseEntity<>(res, HttpStatus.OK);
         }
     }
-    @GetMapping("/accept_invitation")
-    public ResponseEntity<Invitation>acceptInviteProject(
-            @RequestParam String token,
-            @RequestHeader("Authorization") String jwt,
-            @RequestBody Project project
-    ) throws Exception {
-        {
-            User user = userService.findUserProfileByJwt(jwt);
-            Invitation invitation = invitationService.acceptInvitation(token, user.getId());
-            projectService.AddUserToProject(invitation.getProjectId(),user.getId());
 
-            return new ResponseEntity<>(invitation, HttpStatus.ACCEPTED);
-        }
+    @GetMapping("/accept_invitation")
+    public ResponseEntity<Invitation> acceptInviteProject(
+            @RequestParam String token,
+            @RequestHeader("Authorization") String jwt) throws Exception {
+        User user = userService.findUserProfileByJwt(jwt);
+        Invitation invitation = invitationService.acceptInvitation(token, user.getId());
+        projectService.AddUserToProject(invitation.getProjectId(), user.getId());
+
+        return new ResponseEntity<>(invitation, HttpStatus.ACCEPTED);
     }
+
 }

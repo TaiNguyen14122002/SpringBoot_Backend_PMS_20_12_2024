@@ -14,28 +14,6 @@ import java.util.Date;
 
 public class JwtProvider {
 
-//    static SecretKey Key = Keys.hmacShaKeyFor(JwtConstant.SECRETE_KEY.getBytes());
-//
-//
-//    public static String generateToken(Authentication auth){
-//
-//        return Jwts.builder().setIssuedAt(new Date())
-//                .setExpiration(new Date(new Date().getTime()+86400000))
-//                .claim("email", auth.getName())
-//                .signWith(Key)
-//                .compact();
-//
-//
-//    }
-//
-//    public static String getEmailFromToken(String jwt){
-//            Claims claims = Jwts.parserBuilder().setSigningKey(Key).build().parseClaimsJws(jwt).getBody();
-//
-//        return String.valueOf(claims.get("email"));
-//
-//    }
-
-
     // Generate a secure key for HMAC-SHA256
     private static final SecretKey KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
@@ -51,6 +29,8 @@ public class JwtProvider {
 
     // Extract email from JWT token
     public static String getEmailFromToken(String jwt) {
+        jwt = jwt.substring(7);
+
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(KEY) // Set the signing key for parsing
                 .build()
@@ -58,6 +38,11 @@ public class JwtProvider {
                 .getBody(); // Get the body of the JWT
 
         return String.valueOf(claims.get("email")); // Extract email claim from JWT
+    }
+
+    // Get the secret key
+    public static SecretKey getKey() {
+        return KEY;
     }
 
 

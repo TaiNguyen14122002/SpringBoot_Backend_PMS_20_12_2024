@@ -9,6 +9,7 @@ import com.TaiNguyen.ProjectManagementSystems.response.MessageResponse;
 import com.TaiNguyen.ProjectManagementSystems.service.IssueService;
 import com.TaiNguyen.ProjectManagementSystems.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,12 +30,27 @@ public class IssueController {
         return ResponseEntity.ok(issueService.getIssueById(issueId));
     }
 
+    @GetMapping("/Asignee")
+    public ResponseEntity<List<Issue>> getIssueByAsignee(@RequestHeader("Authorization") String token) throws Exception {
+        try{
+            User tokenUser = userService.findUserProfileByJwt(token);
+            User user = userService.findUserById(tokenUser.getId());
+
+            List<Issue> issues = issueService.getIssuesByUserId(user);
+            return ResponseEntity.ok(issues);
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+
+        }
+    }
+
     @GetMapping("/project/{projectId}")
     public ResponseEntity<List<Issue>> getIssueByProjectId(@PathVariable Long projectId)
             throws Exception {
         return ResponseEntity.ok(issueService.getIssueByProjectId(projectId));
     }
 
+    @PostMapping()
     public ResponseEntity<IssueDTO> createIssue(@RequestBody IssueRequest issue,
                                                 @RequestHeader("Authorization") String token)
         throws Exception{
@@ -78,7 +94,7 @@ public class IssueController {
 
         return ResponseEntity.ok(issue);
     }
-
+    @PutMapping("/{issueId}/status/{status}")
     public ResponseEntity<Issue> updateIssueStatus(
             @PathVariable String status,
             @PathVariable Long issueId) throws Exception{

@@ -20,6 +20,7 @@ import java.util.Collections;
 @EnableWebSecurity
 public class AppConfig {
 
+    //cau hinh chuoi bo loc bao mat
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.sessionManagement(Management -> Management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -40,15 +41,11 @@ public class AppConfig {
             public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                 CorsConfiguration cfg = new CorsConfiguration();
                 cfg.setAllowedOrigins(Arrays.asList(
-                        "http://localhost:3000/",
-                        "http://localhost:5173",
-                        "http://localhost:4200"
+
+                        "http://localhost:5173"
+
                 ));
-//                cfg.setAllowedMethods(Collections.singletonList("*"));
-//                cfg.setAllowCredentials(true);
-//                cfg.setAllowedHeaders(Collections.singletonList("*"));
-//                cfg.setExposedHeaders(Arrays.asList("Authorization"));
-//                cfg.setMaxAge(3600L);
+
                 cfg.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                 cfg.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
                 cfg.setExposedHeaders(Arrays.asList("Authorization"));

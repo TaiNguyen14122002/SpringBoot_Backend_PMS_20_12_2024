@@ -36,8 +36,11 @@ public class JwtTokenValidator extends OncePerRequestFilter {
         jwt = jwt.substring(7); // Loại bỏ "Bearer " khỏi token
 
         try {
-            SecretKey key = Keys.hmacShaKeyFor(JwtConstant.SECRETE_KEY.getBytes());
-            Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(jwt).getBody();
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(JwtProvider.getKey()) // Sử dụng khóa từ JwtProvider
+                    .build()
+                    .parseClaimsJws(jwt)
+                    .getBody();
 
             String email = String.valueOf(claims.get("email"));
             String authorities = String.valueOf(claims.get("authorities"));

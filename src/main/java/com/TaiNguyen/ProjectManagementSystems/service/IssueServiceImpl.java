@@ -34,6 +34,12 @@ public class IssueServiceImpl implements IssueService{
     }
 
     @Override
+    public List<Issue> getIssuesByUserId(User user) throws Exception {
+        return issueRepository.findByAssignee(user);
+    }
+
+
+    @Override
     public List<Issue> getIssueByProjectId(Long projectId) throws Exception {
         return issueRepository.findByProjectId(projectId);
     }

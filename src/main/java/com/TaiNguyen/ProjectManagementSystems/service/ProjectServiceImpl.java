@@ -21,6 +21,7 @@ public class ProjectServiceImpl implements ProjectService{
     @Autowired
     private UserService userService;
 
+    @Autowired
     private ChatService chatService;
 
     @Override
@@ -44,19 +45,41 @@ public class ProjectServiceImpl implements ProjectService{
         return savedProject;
     }
 
+//    @Override
+//    public List<Project> getProjectByTeam(User user, String category, String tag) throws Exception {
+//        List<Project> projects = projectRepository.findByTeamContainingOrOwner(user, user);
+//
+//        if(projects!=null){
+//            projects= projects.stream().filter(project -> project.getCategory().equals(category))
+//                    .collect(Collectors.toList());
+//        }
+//
+//        if(tag!=null){
+//            projects= projects.stream().filter(project -> project.getTags().contains(tag))
+//                    .collect(Collectors.toList());
+//        }
+//        return projects;
+//    }
+
     @Override
     public List<Project> getProjectByTeam(User user, String category, String tag) throws Exception {
-        List<Project> projects = projectRepository.findByTeamContainingOrOwner(user, user);
-
-        if(projects!=null){
-            projects= projects.stream().filter(project -> project.getCategory().equals(category))
+        List<Project> projects;
+        if (category != null && tag != null) {
+            projects = projectRepository.findByTeamContainingOrOwner(user, user).stream()
+                    .filter(project -> category.equals(project.getCategory()) && project.getTags().contains(tag))
                     .collect(Collectors.toList());
-        }
-
-        if(tag!=null){
-            projects= projects.stream().filter(project -> project.getTags().contains(tag))
+        } else if (category != null) {
+            projects = projectRepository.findByTeamContainingOrOwner(user, user).stream()
+                    .filter(project -> category.equals(project.getCategory()))
                     .collect(Collectors.toList());
+        } else if (tag != null) {
+            projects = projectRepository.findByTeamContainingOrOwner(user, user).stream()
+                    .filter(project -> project.getTags().contains(tag))
+                    .collect(Collectors.toList());
+        } else {
+            projects = projectRepository.findByTeamContainingOrOwner(user, user);
         }
+//        System.out.println("Retrieved Projects: " + projects);
         return projects;
     }
 

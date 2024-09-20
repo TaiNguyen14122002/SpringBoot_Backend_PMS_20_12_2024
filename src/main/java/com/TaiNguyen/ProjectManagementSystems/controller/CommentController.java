@@ -33,7 +33,7 @@ public class CommentController {
         return ResponseEntity.ok(createdComment);
     }
 
-    @DeleteMapping()
+    @DeleteMapping("/{commentId}")
     public ResponseEntity<MessageResponse> deleteComment(@PathVariable Long commentId,
                                                          @RequestHeader("Authorization") String jwt)
         throws Exception{
@@ -44,7 +44,7 @@ public class CommentController {
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
-    @GetMapping()
+    @GetMapping("/{issueId}")
     public ResponseEntity<List<Comment>> getCommentsByIssueId(@PathVariable Long issueId){
         List<Comment> comments = commentService.findCommentByIssueId(issueId);
         return new ResponseEntity<>(comments, HttpStatus.OK);
