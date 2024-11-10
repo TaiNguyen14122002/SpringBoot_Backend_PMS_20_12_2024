@@ -3,6 +3,7 @@ package com.TaiNguyen.ProjectManagementSystems.controller;
 import com.TaiNguyen.ProjectManagementSystems.Modal.Issue;
 import com.TaiNguyen.ProjectManagementSystems.Modal.IssueDTO;
 import com.TaiNguyen.ProjectManagementSystems.Modal.User;
+import com.TaiNguyen.ProjectManagementSystems.repository.IssueRepository;
 import com.TaiNguyen.ProjectManagementSystems.request.IssueRequest;
 import com.TaiNguyen.ProjectManagementSystems.response.AuthResponse;
 import com.TaiNguyen.ProjectManagementSystems.response.MessageResponse;
@@ -14,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/issues")
@@ -24,6 +26,8 @@ public class IssueController {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private IssueRepository issueRepository;
 
     @GetMapping("/{issueId}")
     public ResponseEntity<Issue> getIssueById(@PathVariable Long issueId) throws Exception {
@@ -100,5 +104,91 @@ public class IssueController {
             @PathVariable Long issueId) throws Exception{
         Issue issue = issueService.updateIssue(issueId, status);
         return ResponseEntity.ok(issue);
+    }
+
+//    @GetMapping("/project/{projectId}/status")
+//    public ResponseEntity<?> getIssuesCountByStatus(@RequestHeader("Authorization") String token,
+//                                                    @PathVariable Long projectId) throws Exception {
+//        User user = userService.findUserProfileByJwt(token);
+//
+//        boolean isOwner = issueService.checkProjectOwner(projectId, user.getId());
+//        if(!isOwner){
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Bạn không có quyền truy cập thông tin này");
+//        }
+//
+//        var issueConuts = issueService.getIssueCountByStatus(projectId);
+//        return ResponseEntity.ok(issueConuts);
+//    }
+
+    @GetMapping("/project/{projectId}/status")
+    public ResponseEntity<?> getIssuesCountByStatus(@RequestHeader("Authorization") String token,
+                                                    @PathVariable Long projectId) {
+        try {
+            // Xác thực người dùng từ JWT token
+            User user = userService.findUserProfileByJwt(token);
+
+            // Kiểm tra quyền sở hữu dự án
+            boolean isOwner = issueService.checkProjectOwner(projectId, user.getId());
+            if (!isOwner) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Bạn không có quyền truy cập thông tin này");
+            }
+
+            // Lấy số lượng công việc theo trạng thái
+            Map<String, Long> issueCounts = issueService.getIssueCountByStatus(projectId);
+            return ResponseEntity.ok(issueCounts);
+
+        } catch (Exception e) {
+            // Xử lý ngoại lệ và trả về thông báo lỗi
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Đã xảy ra lỗi trong quá trình xử lý");
+        }
+    }
+
+
+    @GetMapping("/AllIssueByAssigneedId")
+    public List<Issue> AllIssueByAssigneeId( @RequestHeader("Authorization") String jwt) throws Exception{
+        User user = userService.findUserProfileByJwt(jwt);
+        return issueService.allIssuesByAssigneeId(user.getId());
+    }
+
+    @GetMapping("/GetIssueByProjectIdAndUserId")
+    public List<Issue> getIssuesByProjectAndUser( @RequestHeader("Authorization") String jwt, @RequestParam Long projectId) throws Exception{
+        User user = userService.findUserProfileByJwt(jwt);
+        return issueService.getIssueByProjectAndAssigneeId(projectId, user.getId());
+    }
+
+    @GetMapping("/statistics/project/{projectId}")
+    public ResponseEntity<Map<String, Long>> getUserIssueStatisticsByProject(
+            @RequestHeader("Authorization") String jwt,
+            @PathVariable Long projectId) throws Exception {
+        User user = userService.findUserProfileByJwt(jwt);
+        Map<String, Long> stats = issueService.getUserIssueStatisticsByProject(user.getId(), projectId);
+        return ResponseEntity.ok(stats);
+    }
+
+    @GetMapping("/priority-count/all-projects")
+    public ResponseEntity<List<Map<String, Object>>> getIssueCountByPriorityForAllProjects(@RequestHeader("Authorization") String jwt) throws Exception {
+        User user = userService.findUserProfileByJwt(jwt);
+        List<Map<String, Object>> data = issueService.getIssueCountByPriorityForUserProjects(user.getId());
+        return ResponseEntity.ok(data);
+    }
+
+    @GetMapping("/countByPriority/{projectId}")
+    public Map<String, Long> getIssueCountByPriority(@PathVariable Long projectId){
+        return issueService.getIssueCountByPriority(projectId);
+    }
+
+    @GetMapping("/countByStatus/{projectId}")
+    public Map<String, Long> getIssueCountsByStatus(@PathVariable Long projectId) {
+        return issueService.getIssueCountByStatuss(projectId);
+    }
+
+    @GetMapping("/countByStatusAndAssignee/{projectId}")
+    public Map<String, Map<String, Long>> getUserIssueStatisticsByAssigneeForAllProjects(@PathVariable Long projectId){
+        return issueService.getIssueCountByStatusAndAssignee(projectId);
+    }
+
+    @GetMapping("/projects/completion-ratio")
+    public double getCompletionRatioForProject(@RequestParam Long projectId) {
+        return issueService.getIssueDoneRatioForProject(projectId);
     }
 }

@@ -7,9 +7,9 @@ import com.TaiNguyen.ProjectManagementSystems.repository.IssueRepository;
 import com.TaiNguyen.ProjectManagementSystems.request.IssueRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestHeader;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class IssueServiceImpl implements IssueService{
@@ -84,5 +84,122 @@ public class IssueServiceImpl implements IssueService{
         issue.setStatus(status);
         return issueRepository.save(issue);
 
+    }
+
+    @Override
+    public boolean checkProjectOwner(Long projectId, Long userId) throws Exception {
+        Project project = projectService.getProjectById(projectId);
+
+        if (project != null && project.getOwner() != null && project.getOwner().getId() == userId) {
+            return true;
+        }
+
+        return false;
+
+    }
+
+    @Override
+    public Map<String, Long> getIssueCountByStatus(Long projectId) throws Exception {
+        List<Issue> issues = issueRepository.findByProjectId(projectId);
+
+        long inProgressCount = issues.stream()
+                .filter(issue -> "in progress".equalsIgnoreCase(issue.getStatus()))
+                .count();
+        long notStartedCount = issues.stream()
+                .filter(issue -> "not started".equalsIgnoreCase(issue.getStatus()))
+                .count();
+        long doneCount = issues.stream()
+                .filter(issue -> "done".equalsIgnoreCase(issue.getStatus()))
+                .count();
+
+        Map<String, Long> issueCountByStatus = new HashMap<>();
+        issueCountByStatus.put("inprogress", inProgressCount);
+        issueCountByStatus.put("notstarted", notStartedCount);
+        issueCountByStatus.put("done", doneCount);
+
+        return issueCountByStatus;
+    }
+
+    @Override
+    public List<Issue> allIssuesByAssigneeId(Long userId) throws Exception {
+        return issueRepository.findAllIssueByAssigneeId(userId);
+
+    }
+
+    @Override
+    public List<Issue> getIssueByProjectAndAssigneeId(Long projectId, Long userId) throws Exception {
+        return issueRepository.findByProject_IdAndAssignee_Id(projectId, userId);
+    }
+
+    @Override
+    public Map<String, Long> getUserIssueStatisticsByProject(Long userId, Long projectId) {
+        Map<String, Long> issueStatistics = new HashMap<>();
+        issueStatistics.put("total", issueRepository.countTotalIssuesByUserAndProject(userId, projectId));
+        issueStatistics.put("pending", issueRepository.countTodoIssuesByUserAndProject(userId, projectId));
+        issueStatistics.put("inProgress", issueRepository.countInProgressIssuesByUserAndProject(userId, projectId));
+        issueStatistics.put("done", issueRepository.countDoneIssuesByUserAndProject(userId, projectId));
+        return issueStatistics;
+
+    }
+
+    public List<Map<String, Object>> getIssueCountByPriorityForUserProjects(Long userId) {
+        List<Object[]> results = issueRepository.countIssuesByPriorityForUserProjects(userId);
+        List<Map<String, Object>> priorityCounts = new ArrayList<>();
+        for (Object[] result : results) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("priority", result[0]);
+            data.put("count", result[1]);
+            priorityCounts.add(data);
+        }
+        return priorityCounts;
+    }
+
+    @Override
+    public Map<String, Long> getIssueCountByPriority(Long projectId) {
+        List<Object[]> results = issueRepository.countIssuesByPriority(projectId);
+        Map<String, Long> priorityCounts = new HashMap<>();
+        for (Object[] result : results) {
+            String priority = (String) result[0];
+            Long count = (Long) result[1];
+            priorityCounts.put(priority, count);
+        }
+        return priorityCounts;
+    }
+
+    @Override
+    public Map<String, Long> getIssueCountByStatuss(Long projectId) {
+        List<Object[]> results = issueRepository.countIssuesByStatus(projectId);
+        Map<String, Long> statusCounts = new HashMap<>();
+        for (Object[] result : results) {
+            String status = (String) result[0];
+            Long count = (Long) result[1];
+            statusCounts.put(status, count);
+        }
+        return statusCounts;
+    }
+
+    @Override
+    public Map<String, Map<String, Long>> getIssueCountByStatusAndAssignee(Long projectId) {
+        List<Object[]> results = issueRepository.countIssuesByStatusAndAssignee(projectId);
+        Map<String, Map<String, Long>> statusCounts = new HashMap<>();
+
+        for(Object[] result : results) {
+            String assigneeName = result[0] != null ? (String) result[0] : "Chưa phân công";
+            String status = (String) result[1];
+            Long count = (Long) result[2];
+
+            statusCounts.computeIfAbsent(assigneeName, k -> new HashMap<>())
+                    .put(status, count);
+        }
+        return statusCounts;
+    }
+
+    @Override
+    public double getIssueDoneRatioForProject(Long projectId) {
+        long completedCount = issueRepository.countCompletedIssuesByProject(projectId);
+        long inProgressOrNotStartedCount = issueRepository.countInProgressOrNotStartedIssuesByProject(projectId);
+
+        long totalCount = completedCount + inProgressOrNotStartedCount;
+        return ((int) completedCount * 100 / totalCount);
     }
 }

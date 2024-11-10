@@ -11,11 +11,15 @@ import com.TaiNguyen.ProjectManagementSystems.service.InvitationService;
 import com.TaiNguyen.ProjectManagementSystems.service.ProjectService;
 import com.TaiNguyen.ProjectManagementSystems.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/projects")
@@ -29,6 +33,32 @@ public class ProjectController {
 
     @Autowired
     private InvitationService invitationService;
+
+    @Value("${file.upload-dir}")
+    private String uploadDir;
+
+//    @PostMapping("/uploadFileToProject/{projectId}/upload")
+//    public String uploadFile(@PathVariable Long projectId, @RequestParam("file") MultipartFile[] file) throws Exception {
+//        try {
+//            projectService.uploadFileToProject(projectId, file);
+//            return "File uploaded successfully";
+//        }catch (Exception e){
+//            return "Error occured while uploading file" + e.getMessage();
+//        }
+//    }
+
+
+
+    @PutMapping("/uploadFileToProject/{projectId}/upload")
+    public String uploadFile(@PathVariable Long projectId, @RequestBody Project files) throws Exception {
+        try {
+            projectService.uploadFileToProject(projectId, files);
+            return "File uploaded successfully";
+        }catch (Exception e){
+            return "Error occured while uploading file" + e.getMessage();
+        }
+    }
+
 
     @GetMapping()
     public ResponseEntity<List<Project>>getProjects(
@@ -149,6 +179,112 @@ public class ProjectController {
         projectService.AddUserToProject(invitation.getProjectId(), user.getId());
 
         return new ResponseEntity<>(invitation, HttpStatus.ACCEPTED);
+    }
+
+    @GetMapping("/count")
+    public ResponseEntity<Long> getTotalProjects(@RequestHeader("Authorization") String jwt) throws Exception {
+        User user = userService.findUserProfileByJwt(jwt);
+        long totalProjects = projectService.countTotalProjects(user.getId());
+        return ResponseEntity.ok(totalProjects);
+    }
+
+    @GetMapping("/countProjectJoin")
+    public ResponseEntity<Long> getCountJoinProject(@RequestHeader("Authorization") String jwt) throws Exception{
+        User user = userService.findUserProfileByJwt(jwt);
+        long JointotalProjects = projectService.findParticipatedProjects(user.getId());
+        return ResponseEntity.ok(JointotalProjects);
+    }
+
+    @GetMapping("/countProjects")
+    public Map<String, Map<String, Integer>> countProjectsInMonth(@RequestParam int year,
+                                                                  @RequestHeader("Authorization") String jwt) throws Exception {
+        User user = userService.findUserProfileByJwt(jwt);
+
+        return projectService.countUserProjectsInMonth(user.getId(), year);
+    }
+
+    @GetMapping("/count/ListProject")
+    public List<Project> countListProjectsInMonth(@RequestParam int year,
+                                              @RequestHeader("Authorization") String jwt) throws Exception {
+        User user = userService.findUserProfileByJwt(jwt);
+
+        return projectService.countListUserProjectsInMonth(user.getId(), year);
+    }
+
+    @GetMapping("/pinned")
+    public List<Project> getPinnedProjects() {
+        return projectService.getPinnedProjects();
+    }
+
+    @GetMapping("/deleted")
+    public List<Project> getDeletedProjects() {
+        return projectService.getDeletedProjects();
+    }
+
+    @GetMapping("/all")
+    public List<Project> getAllProjects() {
+        return projectService.getAllProjects();
+    }
+
+    @PutMapping("/{projectId}/update-action")
+    public String updateProjectPinned(@RequestHeader("Authorization") String jwt, @PathVariable Long projectId ) throws Exception {
+        User user = userService.findUserProfileByJwt(jwt);
+
+        try {
+            projectService.updateProjectPinned(user.getId(), projectId);
+            return "Ghim thành công dự án";
+        }catch (Exception e){
+            return e.getMessage();
+        }
+    }
+
+    @GetMapping("/projectPinned")
+    public ResponseEntity<List<Project>> getProjectPinnedByUser( @RequestHeader("Authorization") String jwt,
+                                                                 @RequestParam(required = false)String category,
+                                                                 @RequestParam(required = false)String tag) throws Exception {
+        User user = userService.findUserProfileByJwt(jwt);
+        List<Project> projectPinned = projectService.getProjectPinned(user.getId(), category, tag);
+        return ResponseEntity.ok(projectPinned);
+    }
+
+    @GetMapping("/expiring")
+    public ResponseEntity<List<Project>> getExpiringProjects(@RequestHeader("Authorization") String jwt) throws Exception {
+        User user = userService.findUserProfileByJwt(jwt);
+        if(user == null){
+            return ResponseEntity.notFound().build();
+        }
+        List<Project> expiringProjects = projectService.getExpiredProjectsByUser(user);
+        return ResponseEntity.ok(expiringProjects);
+    }
+
+    @GetMapping("/expired")
+    public ResponseEntity<List<Project>> getExpiredProjectsByUser(@RequestHeader("Authorization") String jwt) throws Exception {
+        User user = userService.findUserProfileByJwt(jwt);
+        List<Project> expiringProjects = projectService.getExpiredProjects(user);
+        return ResponseEntity.ok(expiringProjects);
+    }
+
+    @PutMapping("/{projectId}/update-action-deleted")
+    public String updateProjectDeleted(@RequestHeader("Authorization") String jwt, @PathVariable Long projectId, @RequestParam int action ) throws Exception {
+        User user = userService.findUserProfileByJwt(jwt);
+
+        try {
+            projectService.updateProjectDeleted(user.getId(), projectId, action);
+            return "Xoá thành công dự án";
+        }catch (Exception e){
+            return e.getMessage();
+        }
+    }
+
+    @GetMapping("/Projectsdeleted")
+    public ResponseEntity<List<Project>> getDeletedProjectsByOwner(@RequestHeader("Authorization") String jwt) throws Exception {
+        User user = userService.findUserProfileByJwt(jwt);
+        List<Project> deletedProjects = projectService.getDeletedProjectsByOwner(user.getId());
+
+        if(deletedProjects.isEmpty()){
+            return ResponseEntity.status(404).body(null);
+        }
+        return ResponseEntity.ok(deletedProjects);
     }
 
 }

@@ -6,6 +6,7 @@ import com.TaiNguyen.ProjectManagementSystems.request.IssueRequest;
 import jdk.jshell.spi.ExecutionControl;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface IssueService {
@@ -22,4 +23,24 @@ public interface IssueService {
     Issue addUserToIssue(Long issueId, Long userId) throws Exception;
 
     Issue updateIssue(Long issueId, String status) throws Exception;
+
+    boolean checkProjectOwner(Long projectId, Long userId) throws Exception;
+
+    Map<String, Long> getIssueCountByStatus(Long projectId) throws Exception;
+
+    List<Issue> allIssuesByAssigneeId(Long userId) throws Exception;
+
+    List<Issue> getIssueByProjectAndAssigneeId(Long projectId, Long userId) throws Exception;
+
+    Map<String, Long> getUserIssueStatisticsByProject(Long userId, Long projectId);
+
+    public List<Map<String, Object>> getIssueCountByPriorityForUserProjects(Long userId);
+
+    Map<String, Long> getIssueCountByPriority(Long projectId);
+
+    Map<String, Long> getIssueCountByStatuss(Long projectId);
+
+    Map<String, Map<String, Long>> getIssueCountByStatusAndAssignee(Long projectId);
+
+    double getIssueDoneRatioForProject(Long projectId);
 }

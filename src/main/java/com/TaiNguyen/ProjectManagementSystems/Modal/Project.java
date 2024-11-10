@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,6 +26,14 @@ public class Project {
 
     private List<String> tags = new ArrayList<>();
 
+    @ElementCollection
+    private List<String> fileNames = new ArrayList<>();
+
+    @ElementCollection
+    private List<String> goals = new ArrayList<>();
+
+
+
     @JsonIgnore
     @OneToOne(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     private Chat chat;
@@ -37,5 +46,13 @@ public class Project {
 
     @ManyToMany
     private List<User> team = new ArrayList<>();
+
+    private LocalDate createdDate = LocalDate.now();
+
+    private LocalDate endDate; // Thêm ngày kết thúc
+
+    private int action = 0;
+
+    private String status = "In_Progress";
 
 }

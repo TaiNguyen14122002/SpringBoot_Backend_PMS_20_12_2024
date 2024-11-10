@@ -3,8 +3,10 @@ package com.TaiNguyen.ProjectManagementSystems.service;
 import com.TaiNguyen.ProjectManagementSystems.Modal.Chat;
 import com.TaiNguyen.ProjectManagementSystems.Modal.Project;
 import com.TaiNguyen.ProjectManagementSystems.Modal.User;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ProjectService {
 
@@ -12,6 +14,7 @@ public interface ProjectService {
 
 
     List<Project> getProjectByTeam(User user, String category, String tag)throws Exception;
+
 
     Project getProjectById(Long projectId)throws Exception;
 
@@ -26,4 +29,33 @@ public interface ProjectService {
     Chat getChatByProjectId(Long projectId)throws Exception;
 
     List<Project> searchProjects(String keyword, User user) throws Exception;
+
+    void uploadFileToProject(Long projectId, Project file) throws Exception;
+
+    long countTotalProjects(Long ownerId);
+
+    long findParticipatedProjects(Long ownerId);
+
+    Map<String, Map<String, Integer>> countUserProjectsInMonth(Long userId, int year);
+
+
+    List<Project> countListUserProjectsInMonth(Long userId, int year);
+
+
+    public List<Project> getPinnedProjects();
+    public List<Project> getDeletedProjects();
+    public List<Project> getAllProjects();
+
+    public void updateProjectPinned(Long userId, Long projectId);
+
+    public void updateProjectDeleted(Long userId, Long projectId, int action);
+
+    public List<Project> getProjectPinned(Long userId, String category, String tag);
+
+    public List<Project> getExpiredProjectsByUser(User user);
+
+    public List<Project> getExpiredProjects(User user);
+
+    public List<Project> getDeletedProjectsByOwner(Long userId);
+
 }
