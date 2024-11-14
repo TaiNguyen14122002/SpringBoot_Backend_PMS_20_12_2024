@@ -55,6 +55,7 @@ public class IssueServiceImpl implements IssueService{
         issue.setProjectID(issueRequest.getProjectId());
         issue.setPriority(issueRequest.getPriority());
         issue.setDueDate(issueRequest.getDueDate());
+        issue.setStartDate(issueRequest.getStartDate());
 
         issue.setProject(project);
 
@@ -201,5 +202,12 @@ public class IssueServiceImpl implements IssueService{
 
         long totalCount = completedCount + inProgressOrNotStartedCount;
         return ((int) completedCount * 100 / totalCount);
+    }
+
+    @Override
+    public void uploadFileToIssue(Long IssueId, Issue file) throws Exception {
+        Issue issue = getIssueById(IssueId);
+        issue.getFileNames().addAll(file.getFileNames());
+        issueRepository.save(issue);
     }
 }

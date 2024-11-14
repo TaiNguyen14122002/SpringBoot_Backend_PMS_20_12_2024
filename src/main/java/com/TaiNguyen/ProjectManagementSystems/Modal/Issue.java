@@ -23,6 +23,7 @@ public class Issue {
     private String status;
     private Long projectID;
     private String priority;
+    private LocalDate startDate;
     private LocalDate dueDate;
     private List<String> tags = new ArrayList<>();
 
@@ -36,6 +37,9 @@ public class Issue {
     @JsonIgnore
     @OneToMany(mappedBy = "issue", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
+
+    @ElementCollection
+    private List<String> fileNames = new ArrayList<>();
 
 
 

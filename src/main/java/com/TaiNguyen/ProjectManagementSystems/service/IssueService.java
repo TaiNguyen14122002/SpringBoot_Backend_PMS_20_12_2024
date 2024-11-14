@@ -1,6 +1,7 @@
 package com.TaiNguyen.ProjectManagementSystems.service;
 
 import com.TaiNguyen.ProjectManagementSystems.Modal.Issue;
+import com.TaiNguyen.ProjectManagementSystems.Modal.Project;
 import com.TaiNguyen.ProjectManagementSystems.Modal.User;
 import com.TaiNguyen.ProjectManagementSystems.request.IssueRequest;
 import jdk.jshell.spi.ExecutionControl;
@@ -43,4 +44,6 @@ public interface IssueService {
     Map<String, Map<String, Long>> getIssueCountByStatusAndAssignee(Long projectId);
 
     double getIssueDoneRatioForProject(Long projectId);
+
+    void uploadFileToIssue(Long IssueId, Issue file) throws Exception;
 }

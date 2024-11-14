@@ -12,8 +12,11 @@ import java.util.List;
 public interface ProjectRepository extends JpaRepository<Project,Long> {
 
 
+
+    @Query("SELECT p FROM Project p WHERE p.name LIKE %:partialName% AND :user MEMBER OF p.team AND p.action IN (0, 1)")
     List<Project> findByNameContainingAndTeamContains(String partialName, User user);
 
+    @Query("SELECT p FROM Project p JOIN p.team t WHERE (t = :user OR p.owner = :owner) AND p.action = 0")
     List<Project> findByTeamContainingOrOwner(User user, User owner);
 
     // Truy vấn các dự án đã bị xóa (action = -1) của người dùng theo ownerId

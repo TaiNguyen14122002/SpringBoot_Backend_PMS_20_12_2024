@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.sql.Array;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,7 +19,14 @@ public class User {
 
     private String fullname;
     private String email;
-
+    private String address;
+    private LocalDate createdDate = LocalDate.now();
+    private String phone;
+    private String company;
+    private String programerposition;
+    private List<String> selectedSkills = new ArrayList<>();
+    private String introduce;
+    private String avatar;
 
     //An Mat Khau
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)

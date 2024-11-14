@@ -2,6 +2,7 @@ package com.TaiNguyen.ProjectManagementSystems.controller;
 
 import com.TaiNguyen.ProjectManagementSystems.Modal.Issue;
 import com.TaiNguyen.ProjectManagementSystems.Modal.IssueDTO;
+import com.TaiNguyen.ProjectManagementSystems.Modal.Project;
 import com.TaiNguyen.ProjectManagementSystems.Modal.User;
 import com.TaiNguyen.ProjectManagementSystems.repository.IssueRepository;
 import com.TaiNguyen.ProjectManagementSystems.request.IssueRequest;
@@ -191,4 +192,16 @@ public class IssueController {
     public double getCompletionRatioForProject(@RequestParam Long projectId) {
         return issueService.getIssueDoneRatioForProject(projectId);
     }
+
+    @PutMapping("/uploadFileToIssue/{IssueId}/upload")
+    public String uploadFile(@PathVariable Long IssueId, @RequestBody Issue files) throws Exception {
+        try {
+            issueService.uploadFileToIssue(IssueId, files);
+            return "File uploaded successfully";
+        }catch (Exception e){
+            return "Error occured while uploading file" + e.getMessage();
+        }
+    }
+
+
 }

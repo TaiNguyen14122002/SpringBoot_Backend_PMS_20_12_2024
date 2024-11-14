@@ -8,6 +8,7 @@ import com.TaiNguyen.ProjectManagementSystems.repository.InviteRequest;
 import com.TaiNguyen.ProjectManagementSystems.response.ErrorResponse;
 import com.TaiNguyen.ProjectManagementSystems.response.MessageResponse;
 import com.TaiNguyen.ProjectManagementSystems.service.InvitationService;
+import com.TaiNguyen.ProjectManagementSystems.service.NotificationService;
 import com.TaiNguyen.ProjectManagementSystems.service.ProjectService;
 import com.TaiNguyen.ProjectManagementSystems.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,20 +35,8 @@ public class ProjectController {
     @Autowired
     private InvitationService invitationService;
 
-    @Value("${file.upload-dir}")
-    private String uploadDir;
-
-//    @PostMapping("/uploadFileToProject/{projectId}/upload")
-//    public String uploadFile(@PathVariable Long projectId, @RequestParam("file") MultipartFile[] file) throws Exception {
-//        try {
-//            projectService.uploadFileToProject(projectId, file);
-//            return "File uploaded successfully";
-//        }catch (Exception e){
-//            return "Error occured while uploading file" + e.getMessage();
-//        }
-//    }
-
-
+    @Autowired
+    private NotificationService notificationService;
 
     @PutMapping("/uploadFileToProject/{projectId}/upload")
     public String uploadFile(@PathVariable Long projectId, @RequestBody Project files) throws Exception {
@@ -82,6 +71,8 @@ public class ProjectController {
         {
             User user = userService.findUserProfileByJwt(jwt);
             Project createdProject= projectService.createProject(project, user);
+            String notificationContent = "Bạn đã thêm một dự án mới \"" +createdProject.getName() +  "\" đã được tạo!";
+            notificationService.createNotification(notificationContent, createdProject, null);
             return new ResponseEntity<>(createdProject, HttpStatus.OK);
         }
     }

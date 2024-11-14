@@ -92,6 +92,13 @@ public class AuthController {
         CreatedUser.setEmail(user.getEmail());
         CreatedUser.setPassword(passwordEncoder.encode(user.getPassword()));
         CreatedUser.setFullname(user.getFullname());
+        CreatedUser.setAddress(user.getAddress());
+        CreatedUser.setCompany(user.getCompany());
+        CreatedUser.setPhone(user.getPhone());
+        CreatedUser.setProgramerposition(user.getProgramerposition());
+        CreatedUser.setAvatar(user.getAvatar());
+        CreatedUser.setSelectedSkills(user.getSelectedSkills());
+        CreatedUser.setIntroduce(user.getIntroduce());
 
         User savedUser = userRepository.save(CreatedUser);
 
