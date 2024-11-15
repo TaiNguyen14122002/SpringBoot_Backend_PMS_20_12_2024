@@ -38,6 +38,11 @@ public class User {
 
     private int projectSize;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<WorkingType> workTypes = new ArrayList<>();
+
+
 
 
 }

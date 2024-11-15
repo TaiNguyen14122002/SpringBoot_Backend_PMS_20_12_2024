@@ -203,5 +203,27 @@ public class IssueController {
         }
     }
 
+    @GetMapping("/allissue")
+    public ResponseEntity<List<Issue>> getAllIssue(@RequestHeader("Authorization") String jwt) {
+        try {
+            User user = userService.findUserProfileByJwt(jwt);
+            if (user != null) {
+                List<Issue> allIssues = issueRepository.findAll();
+                return ResponseEntity.ok(allIssues);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    @GetMapping("/owner")
+    public ResponseEntity<List<Issue>> getAllIssuesByOwnerId(@RequestHeader("Authorization") String jwt) throws Exception{
+        User user = userService.findUserProfileByJwt(jwt);
+        List<Issue> issues = issueService.getAllIssuesByOwnerId(user.getId());
+        return ResponseEntity.ok(issues);
+    }
+
 
 }

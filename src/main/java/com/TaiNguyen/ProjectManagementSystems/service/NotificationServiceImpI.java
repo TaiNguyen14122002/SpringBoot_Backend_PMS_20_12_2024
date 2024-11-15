@@ -36,4 +36,10 @@ public class NotificationServiceImpI implements NotificationService{
     public List<Notification> getNotificationsForUser(long userId) {
         return List.of();
     }
+
+    @Override
+    public Notification deleteNotification(long project) {
+        notificationRepository.deleteByProjectId(project);
+        return null;
+    }
 }

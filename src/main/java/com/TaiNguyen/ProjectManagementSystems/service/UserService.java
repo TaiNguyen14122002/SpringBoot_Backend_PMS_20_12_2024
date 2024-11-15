@@ -1,6 +1,9 @@
 package com.TaiNguyen.ProjectManagementSystems.service;
 
 import com.TaiNguyen.ProjectManagementSystems.Modal.User;
+import com.TaiNguyen.ProjectManagementSystems.Modal.UserInfoDTO;
+
+import java.util.List;
 
 public interface UserService {
     User findUserProfileByJwt(String jwt)throws Exception;
@@ -20,6 +23,9 @@ public interface UserService {
 
     // Kiểm tra token có hợp lệ không và trả về email nếu token hợp lệ
     String validateResetPasswordToken(String token) throws Exception;
+
+    public List<UserInfoDTO> getUserInfoByProjectId(Long projectId);
+
 
 
 }

@@ -61,4 +61,12 @@ public interface IssueRepository extends JpaRepository<Issue, Long> {
 
     @Query("SELECT COUNT(i) FROM Issue i WHERE (i.status = 'pending' OR i.status = 'in_progress') AND i.project.id = :projectId")
     long countInProgressOrNotStartedIssuesByProject(@Param("projectId") Long projectId);
+
+    // Truy vấn để lấy tất cả Issue của các Project mà user là owner
+    @Query("SELECT i FROM Issue i WHERE i.project.owner.id = :ownerId")
+    List<Issue> findAllIssuesByOwnerId(@Param("ownerId") Long ownerId);
+
+    int countByAssignee(User assignee);
+
+
 }

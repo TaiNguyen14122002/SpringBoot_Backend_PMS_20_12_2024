@@ -1,17 +1,18 @@
 package com.TaiNguyen.ProjectManagementSystems.service;
 
 import com.TaiNguyen.ProjectManagementSystems.Modal.User;
+import com.TaiNguyen.ProjectManagementSystems.Modal.UserInfoDTO;
 import com.TaiNguyen.ProjectManagementSystems.Utill.OTPService;
 import com.TaiNguyen.ProjectManagementSystems.config.JwtProvider;
+import com.TaiNguyen.ProjectManagementSystems.repository.IssueRepository;
 import com.TaiNguyen.ProjectManagementSystems.repository.UserRepository;
+import com.TaiNguyen.ProjectManagementSystems.repository.WorkingTypeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class UserServiceImpl implements UserService{
@@ -29,6 +30,10 @@ public class UserServiceImpl implements UserService{
     // Sử dụng một Map để lưu token tạm thời
     private Map<String, String> resetPasswordToken = new HashMap<>();
     private Map<String, LocalDateTime> tokenExpiryDate = new HashMap<>();
+    @Autowired
+    private IssueRepository issueRepository;
+    @Autowired
+    private WorkingTypeRepository workingTypeRepository;
 
     @Override
     public User findUserProfileByJwt(String jwt) throws Exception {
@@ -107,6 +112,12 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
+    public List<UserInfoDTO> getUserInfoByProjectId(Long projectId) {
+        return userRepository.findAllUsersByProjectId(projectId);
+    }
+
+
+    @Override
     public User updateUsersProjectSize(User user, int number) {
         user.setProjectSize(user.getProjectSize()+number);
         if(user.getProjectSize() == -1){
@@ -114,4 +125,6 @@ public class UserServiceImpl implements UserService{
         }
         return null;
     }
+
+
 }

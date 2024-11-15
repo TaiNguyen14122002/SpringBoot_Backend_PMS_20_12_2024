@@ -41,6 +41,7 @@ public class Project {
     @ManyToOne
     private User owner;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Issue> issues = new ArrayList<>();
 
@@ -54,5 +55,9 @@ public class Project {
     private int action = 0;
 
     private String status = "In_Progress";
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<WorkingType> workTypes = new ArrayList<>();
 
 }

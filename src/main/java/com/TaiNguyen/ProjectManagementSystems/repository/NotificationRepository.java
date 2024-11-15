@@ -12,4 +12,10 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     List<Notification> findByisRead(boolean Read);
     List<Notification> findByProject(Project project);
     List<Notification> findByIssue(Issue issue);
+
+    // Phương thức tìm thông báo theo projectId và issueId
+    List<Notification> findByProjectIdAndIssueId(long projectId, long issueId);
+
+    // Phương thức xóa thông báo theo projectId
+    void deleteByProjectId(long projectId);
 }

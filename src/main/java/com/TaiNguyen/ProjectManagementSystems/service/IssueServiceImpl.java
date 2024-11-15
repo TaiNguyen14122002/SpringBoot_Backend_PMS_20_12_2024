@@ -210,4 +210,11 @@ public class IssueServiceImpl implements IssueService{
         issue.getFileNames().addAll(file.getFileNames());
         issueRepository.save(issue);
     }
+
+    @Override
+    public List<Issue> getAllIssuesByOwnerId(Long ownerId) throws Exception {
+        return issueRepository.findAllIssuesByOwnerId(ownerId);
+    }
+
+
 }

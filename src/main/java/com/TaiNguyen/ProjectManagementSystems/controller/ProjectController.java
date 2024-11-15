@@ -5,12 +5,12 @@ import com.TaiNguyen.ProjectManagementSystems.Modal.Invitation;
 import com.TaiNguyen.ProjectManagementSystems.Modal.Project;
 import com.TaiNguyen.ProjectManagementSystems.Modal.User;
 import com.TaiNguyen.ProjectManagementSystems.repository.InviteRequest;
+import com.TaiNguyen.ProjectManagementSystems.repository.NotificationRepository;
+import com.TaiNguyen.ProjectManagementSystems.repository.ProjectRepository;
+import com.TaiNguyen.ProjectManagementSystems.repository.WorkingTypeRepository;
 import com.TaiNguyen.ProjectManagementSystems.response.ErrorResponse;
 import com.TaiNguyen.ProjectManagementSystems.response.MessageResponse;
-import com.TaiNguyen.ProjectManagementSystems.service.InvitationService;
-import com.TaiNguyen.ProjectManagementSystems.service.NotificationService;
-import com.TaiNguyen.ProjectManagementSystems.service.ProjectService;
-import com.TaiNguyen.ProjectManagementSystems.service.UserService;
+import com.TaiNguyen.ProjectManagementSystems.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -37,6 +37,13 @@ public class ProjectController {
 
     @Autowired
     private NotificationService notificationService;
+    @Autowired
+    private ProjectRepository projectRepository;
+
+    @Autowired
+    private WorkingTypeService workingTypeService;
+    @Autowired
+    private NotificationRepository notificationRepository;
 
     @PutMapping("/uploadFileToProject/{projectId}/upload")
     public String uploadFile(@PathVariable Long projectId, @RequestBody Project files) throws Exception {
@@ -70,8 +77,9 @@ public class ProjectController {
     ) throws Exception {
         {
             User user = userService.findUserProfileByJwt(jwt);
+            System.out.println("Created Project ID: " + user.getId());
             Project createdProject= projectService.createProject(project, user);
-            String notificationContent = "Bạn đã thêm một dự án mới \"" +createdProject.getName() +  "\" đã được tạo!";
+            String notificationContent = "Bạn đã thêm một dự án mới \"" + createdProject.getName() +  "\" đã được tạo!";
             notificationService.createNotification(notificationContent, createdProject, null);
             return new ResponseEntity<>(createdProject, HttpStatus.OK);
         }
@@ -113,6 +121,7 @@ public class ProjectController {
         {
             User user = userService.findUserProfileByJwt(jwt);
             projectService.deleteProject(projectId, user.getId());
+            notificationService.deleteNotification(projectId);
             MessageResponse res = new MessageResponse("Xoá thành công dự án");
             return new ResponseEntity<>(res, HttpStatus.OK);
         }
@@ -168,6 +177,7 @@ public class ProjectController {
         User user = userService.findUserProfileByJwt(jwt);
         Invitation invitation = invitationService.acceptInvitation(token, user.getId());
         projectService.AddUserToProject(invitation.getProjectId(), user.getId());
+        workingTypeService.createWorkingType(user.getId(), invitation.getProjectId(), "Trong công ty");
 
         return new ResponseEntity<>(invitation, HttpStatus.ACCEPTED);
     }
@@ -276,6 +286,18 @@ public class ProjectController {
             return ResponseEntity.status(404).body(null);
         }
         return ResponseEntity.ok(deletedProjects);
+    }
+
+    @GetMapping("/owner")
+    public ResponseEntity<List<Project>> getOwnedProjectsByUser(@RequestHeader("Authorization") String jwt) throws Exception {
+        User user = userService.findUserProfileByJwt(jwt);
+        try {
+            List<Project> ownedProjects = projectRepository.findByOwnerId(user.getId());
+            return ResponseEntity.ok(ownedProjects);
+
+        }catch(Exception e){
+            return ResponseEntity.status(404).body(null);
+        }
     }
 
 }

@@ -34,6 +34,8 @@ public class Issue {
     @ManyToOne
     private Project project;
 
+    private String salary;
+
     @JsonIgnore
     @OneToMany(mappedBy = "issue", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();

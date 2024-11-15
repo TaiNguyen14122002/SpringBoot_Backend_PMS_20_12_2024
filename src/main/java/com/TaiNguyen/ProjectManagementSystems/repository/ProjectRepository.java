@@ -8,9 +8,9 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface ProjectRepository extends JpaRepository<Project,Long> {
-
 
 
     @Query("SELECT p FROM Project p WHERE p.name LIKE %:partialName% AND :user MEMBER OF p.team AND p.action IN (0, 1)")
@@ -21,6 +21,11 @@ public interface ProjectRepository extends JpaRepository<Project,Long> {
 
     // Truy vấn các dự án đã bị xóa (action = -1) của người dùng theo ownerId
     List<Project> findByOwnerIdAndAction(long ownerId, int action);
+
+    //Hiển thị nhữn dự án người dùng làm chủ
+    List<Project> findByOwnerId(long ownerId);
+
+
 
 
 
@@ -57,5 +62,7 @@ public interface ProjectRepository extends JpaRepository<Project,Long> {
     // Truy vấn các dự án có endDate nhỏ hơn ngày hiện tại và action != -1 (không bị xóa logic)
     @Query("SELECT p FROM Project p WHERE p.endDate < :currentDate AND p.action != -1")
     List<Project> findExpiredProjects(LocalDate currentDate);
+
+    Optional<Project> findById(Long id);
 
 }

@@ -32,6 +32,9 @@ public class ProjectServiceImpl implements ProjectService{
     @Autowired
     private ChatService chatService;
 
+    @Autowired
+    private WorkingTypeService workingTypeService;
+
 
 
     @Override
@@ -55,9 +58,14 @@ public class ProjectServiceImpl implements ProjectService{
         createdProject.setEndDate(project.getEndDate());
 
 
+
         Project savedProject = projectRepository.save(createdProject);
 
 
+        System.out.println("taiProject"+savedProject.getId());
+        System.out.println("taiUser"+user.getId());
+
+        workingTypeService.createWorkingType(user.getId(), savedProject.getId(), "Trực tuyến");
 
 
         Chat chat = new Chat();

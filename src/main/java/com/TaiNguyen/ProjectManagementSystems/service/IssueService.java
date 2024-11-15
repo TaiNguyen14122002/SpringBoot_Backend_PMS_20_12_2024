@@ -46,4 +46,6 @@ public interface IssueService {
     double getIssueDoneRatioForProject(Long projectId);
 
     void uploadFileToIssue(Long IssueId, Issue file) throws Exception;
+
+    public List<Issue> getAllIssuesByOwnerId(Long ownerId) throws Exception;
 }

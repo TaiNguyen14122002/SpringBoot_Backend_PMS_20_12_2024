@@ -1,6 +1,7 @@
 package com.TaiNguyen.ProjectManagementSystems.controller;
 
 import com.TaiNguyen.ProjectManagementSystems.Modal.User;
+import com.TaiNguyen.ProjectManagementSystems.Modal.UserInfoDTO;
 import com.TaiNguyen.ProjectManagementSystems.Utill.CorrectPassword;
 import com.TaiNguyen.ProjectManagementSystems.repository.UserRepository;
 import com.TaiNguyen.ProjectManagementSystems.response.ErrorResponse;
@@ -11,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
@@ -77,5 +80,15 @@ public class UserController {
         return new ResponseEntity<>(res, HttpStatus.OK);
 
     }
+
+    // Endpoint lấy thông tin thành viên trong một dự án cụ thể
+    @GetMapping("/project/{projectId}")
+    public ResponseEntity<List<UserInfoDTO>> getAllUsersByProject(@PathVariable Long projectId) {
+        List<UserInfoDTO> users = userService.getUserInfoByProjectId(projectId);
+        return ResponseEntity.ok(users);
+    }
+
+
+
 }
 

@@ -12,4 +12,6 @@ public interface NotificationService {
     public Notification markAsRead(long notificationId);
 
     public List<Notification> getNotificationsForUser(long userId);
+
+    public Notification deleteNotification(long project);
 }
