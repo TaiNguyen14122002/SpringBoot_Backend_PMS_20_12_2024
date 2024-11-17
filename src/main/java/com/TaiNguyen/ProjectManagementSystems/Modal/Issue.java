@@ -25,6 +25,8 @@ public class Issue {
     private String priority;
     private LocalDate startDate;
     private LocalDate dueDate;
+    private String price;
+    private String finish;
     private List<String> tags = new ArrayList<>();
 
     @ManyToOne
@@ -43,6 +45,7 @@ public class Issue {
     @ElementCollection
     private List<String> fileNames = new ArrayList<>();
 
-
-
+    @JsonIgnore
+    @OneToMany(mappedBy = "issue", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserIssueSalary> salaries = new ArrayList<>();
 }

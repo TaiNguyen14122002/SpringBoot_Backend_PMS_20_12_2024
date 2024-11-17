@@ -12,6 +12,8 @@ public interface IssueRepository extends JpaRepository<Issue, Long> {
 
     public List<Issue> findByProjectId(Long id);
 
+
+
     List<Issue> findByAssignee(User userId);
 
     @Query("SELECT i FROM Issue i WHERE i.assignee.id = :userId")
@@ -19,6 +21,8 @@ public interface IssueRepository extends JpaRepository<Issue, Long> {
 
     // Sửa lại phương thức để tìm theo projectId và assigneeId
     List<Issue> findByProject_IdAndAssignee_Id(Long projectId, Long assigneeId);
+
+
 
     @Query("SELECT COUNT(i) FROM Issue i WHERE i.assignee.id = :userId AND i.project.id = :projectId")
     Long countTotalIssuesByUserAndProject(@Param("userId") Long userId, @Param("projectId") Long projectId);
@@ -67,6 +71,11 @@ public interface IssueRepository extends JpaRepository<Issue, Long> {
     List<Issue> findAllIssuesByOwnerId(@Param("ownerId") Long ownerId);
 
     int countByAssignee(User assignee);
+
+    @Query("SELECT i, u.salary, u.isPaid FROM Issue i " +
+            "JOIN i.salaries u " +
+            "WHERE u.user.id = :userId")
+    List<Object[]> findAllIssuesWithSalaryByUserId(@Param("userId") Long userId);
 
 
 }

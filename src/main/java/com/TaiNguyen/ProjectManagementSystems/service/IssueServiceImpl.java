@@ -1,15 +1,17 @@
 package com.TaiNguyen.ProjectManagementSystems.service;
 
-import com.TaiNguyen.ProjectManagementSystems.Modal.Issue;
-import com.TaiNguyen.ProjectManagementSystems.Modal.Project;
-import com.TaiNguyen.ProjectManagementSystems.Modal.User;
+import com.TaiNguyen.ProjectManagementSystems.Modal.*;
 import com.TaiNguyen.ProjectManagementSystems.repository.IssueRepository;
+import com.TaiNguyen.ProjectManagementSystems.repository.ProjectRepository;
+import com.TaiNguyen.ProjectManagementSystems.repository.UserIssueSalaryRepository;
+import com.TaiNguyen.ProjectManagementSystems.repository.UserRepository;
 import com.TaiNguyen.ProjectManagementSystems.request.IssueRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class IssueServiceImpl implements IssueService{
@@ -22,6 +24,15 @@ public class IssueServiceImpl implements IssueService{
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private UserIssueSalaryRepository userIssueSalaryRepository;
+
+    @Autowired
+    private ProjectRepository projectRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
 
     @Override
@@ -51,11 +62,12 @@ public class IssueServiceImpl implements IssueService{
         Issue issue = new Issue();
         issue.setTitle(issueRequest.getTitle());
         issue.setDescription(issueRequest.getDescription());
-        issue.setStatus(issueRequest.getStatus());
+        issue.setStatus("pending");
         issue.setProjectID(issueRequest.getProjectId());
         issue.setPriority(issueRequest.getPriority());
         issue.setDueDate(issueRequest.getDueDate());
         issue.setStartDate(issueRequest.getStartDate());
+        issue.setPrice(issueRequest.getPrice());
 
         issue.setProject(project);
 
@@ -85,6 +97,13 @@ public class IssueServiceImpl implements IssueService{
         issue.setStatus(status);
         return issueRepository.save(issue);
 
+    }
+
+    @Override
+    public Issue updateFinishIssue(Long issueId, String finish) throws Exception {
+        Issue issue = getIssueById(issueId);
+        issue.setFinish(finish);
+        return issueRepository.save(issue);
     }
 
     @Override
@@ -216,5 +235,108 @@ public class IssueServiceImpl implements IssueService{
         return issueRepository.findAllIssuesByOwnerId(ownerId);
     }
 
+    @Override
+    public List<IssueDTO> getIssuesByProject(long projectId) {
+        // Lấy Project theo projectId
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
 
+        // Lấy tất cả các Issues của Project
+        List<Issue> issues = issueRepository.findByProjectId(project.getId());
+
+        // Chuyển đổi các Issue thành IssueDTO
+        return issues.stream().map(issue -> {
+            IssueDTO issueDTO = new IssueDTO();
+            issueDTO.setId(issue.getId());
+            issueDTO.setTitle(issue.getTitle());
+            issueDTO.setDescription(issue.getDescription());
+            issueDTO.setStatus(issue.getStatus());
+            issueDTO.setProjectId(issue.getProjectID());
+            issueDTO.setPriority(issue.getPriority());
+            issueDTO.setStartDate(issue.getStartDate());
+            issueDTO.setAssignes(issue.getAssignee());
+            issueDTO.setDueDate(issue.getDueDate());
+            issueDTO.setPrice(issue.getPrice());
+            issueDTO.setFinish(issue.getFinish());
+            issueDTO.setTags(issue.getTags());
+
+            // Lấy danh sách UserIssueSalary cho mỗi Issue
+            List<UserIssueSalary> salaries = userIssueSalaryRepository.findByIssue(issue);
+
+            // Chuyển đổi danh sách UserIssueSalary thành UserIssueSalaryDTO
+            List<UserIssueSalaryDTO> userIssueSalaryDTOs = salaries.stream()
+                    .map(salary -> {
+                        UserIssueSalaryDTO salaryDTO = new UserIssueSalaryDTO();
+                        salaryDTO.setId(salary.getId());
+                        salaryDTO.setUser(salary.getUser());  // Giả sử User có fullName
+                        salaryDTO.setSalary(salary.getSalary());
+                        salaryDTO.setCurrency(salary.getCurrency());
+                        salaryDTO.setPaid(salary.isPaid());
+                        return salaryDTO;
+                    })
+                    .collect(Collectors.toList());
+
+            issueDTO.setUserIssueSalaries(userIssueSalaryDTOs);
+
+            return issueDTO;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<IssueDTO> getIssuesByUser(long userId) {
+
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        System.out.println("User ID is null");
+
+
+
+        List<UserIssueSalary> userIssueSalaries= userIssueSalaryRepository.findByUser(user);
+
+        List<Issue> issues = issueRepository.findByAssignee(user);
+
+//        List<Issue> issues = issueRepository.findByProjectId(project.getId());
+
+//        List<Issue> issues = userIssueSalaries.stream()
+//                .map(UserIssueSalary::getIssue)
+//                .distinct()
+//                .collect(Collectors.toList());
+//
+        return issues.stream().map(issue -> {
+            IssueDTO issueDTO = new IssueDTO();
+            issueDTO.setId(issue.getId());
+            issueDTO.setTitle(issue.getTitle());
+            issueDTO.setDescription(issue.getDescription());
+            issueDTO.setStatus(issue.getStatus());
+            issueDTO.setProjectId(issue.getProjectID());
+            issueDTO.setPriority(issue.getPriority());
+            issueDTO.setStartDate(issue.getStartDate());
+            issueDTO.setAssignes(issue.getAssignee());
+            issueDTO.setDueDate(issue.getDueDate());
+            issueDTO.setPrice(issue.getPrice());
+            issueDTO.setFinish(issue.getFinish());
+            issueDTO.setTags(issue.getTags());
+
+            List<UserIssueSalaryDTO> salaries = userIssueSalaries.stream()
+                    .filter(salary -> salary.getIssue().getId() == issue.getId())
+                    .map(salary -> {
+                        UserIssueSalaryDTO salaryDTO = new UserIssueSalaryDTO();
+                        salaryDTO.setId(salary.getId());
+                        salaryDTO.setUser(salary.getUser());
+                        salaryDTO.setSalary(salary.getSalary());
+                        salaryDTO.setCurrency(salary.getCurrency());
+                        salaryDTO.setPaid(salary.isPaid());
+                        return salaryDTO;
+                    }).collect(Collectors.toList());
+
+            issueDTO.setUserIssueSalaries(salaries);
+            return issueDTO;
+        }).collect(Collectors.toList());
+
+
+    }
+
+    @Override
+    public List<Object[]> getAllIssuesWithSalaryByUserId(long userId) throws Exception {
+        return issueRepository.findAllIssuesWithSalaryByUserId(userId);
+    }
 }

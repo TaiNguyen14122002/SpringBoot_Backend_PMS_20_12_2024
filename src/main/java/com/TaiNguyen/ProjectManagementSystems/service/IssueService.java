@@ -1,6 +1,7 @@
 package com.TaiNguyen.ProjectManagementSystems.service;
 
 import com.TaiNguyen.ProjectManagementSystems.Modal.Issue;
+import com.TaiNguyen.ProjectManagementSystems.Modal.IssueDTO;
 import com.TaiNguyen.ProjectManagementSystems.Modal.Project;
 import com.TaiNguyen.ProjectManagementSystems.Modal.User;
 import com.TaiNguyen.ProjectManagementSystems.request.IssueRequest;
@@ -25,6 +26,8 @@ public interface IssueService {
 
     Issue updateIssue(Long issueId, String status) throws Exception;
 
+    Issue updateFinishIssue( Long issueId, String finish) throws Exception;
+
     boolean checkProjectOwner(Long projectId, Long userId) throws Exception;
 
     Map<String, Long> getIssueCountByStatus(Long projectId) throws Exception;
@@ -48,4 +51,10 @@ public interface IssueService {
     void uploadFileToIssue(Long IssueId, Issue file) throws Exception;
 
     public List<Issue> getAllIssuesByOwnerId(Long ownerId) throws Exception;
+
+    public List<IssueDTO> getIssuesByProject(long projectId) throws Exception;
+
+    public List<IssueDTO> getIssuesByUser(long userId);
+
+    public List<Object[]> getAllIssuesWithSalaryByUserId(long userId) throws Exception;
 }

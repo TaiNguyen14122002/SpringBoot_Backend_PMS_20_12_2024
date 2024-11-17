@@ -99,15 +99,15 @@ public class ProjectController {
 
 
 
-    @PatchMapping("/{projectId}")
+    @PutMapping("/{projectId}/status")
     public ResponseEntity<Project>updateProject(
             @PathVariable Long projectId,
             @RequestHeader("Authorization") String jwt,
-            @RequestBody Project project
+            @RequestParam String status
     ) throws Exception {
         {
             User user = userService.findUserProfileByJwt(jwt);
-            Project updatedProject= projectService.updateProject(project, projectId);
+            Project updatedProject= projectService.updateStatusProject(status, projectId);
             return new ResponseEntity<>(updatedProject, HttpStatus.OK);
         }
     }
@@ -299,5 +299,15 @@ public class ProjectController {
             return ResponseEntity.status(404).body(null);
         }
     }
+
+//    @PutMapping("{projectId}/status")
+//    public ResponseEntity<String> updateProjectStatus(@PathVariable Long projectId, @RequestParam String status) throws Exception {
+//        try {
+//            projectService.updateStatus(projectId, status);
+//            return ResponseEntity.ok("Cập nhập status thành công");
+//        }catch(Exception e){
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Có lỗi xảy ra");
+//        }
+//    }
 
 }

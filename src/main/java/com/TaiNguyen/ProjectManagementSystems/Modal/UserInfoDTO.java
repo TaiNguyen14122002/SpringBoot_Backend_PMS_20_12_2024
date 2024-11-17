@@ -12,5 +12,8 @@ public class UserInfoDTO {
     private String fullName;
     private String programerPosition;
     private String workType;
-    private Long totalAssignedIssues; // Đổi từ int sang Long
+    private String email;
+    private String phone;
+    private String avatar;
+    private Long issues; // Đổi từ int sang Long
 }

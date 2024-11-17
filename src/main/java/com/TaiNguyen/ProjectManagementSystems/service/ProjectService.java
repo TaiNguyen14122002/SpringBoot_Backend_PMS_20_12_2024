@@ -20,7 +20,7 @@ public interface ProjectService {
 
     void deleteProject(Long projectId, Long userId)throws Exception;
 
-    Project updateProject(Project UpdateProject, Long id)throws Exception;
+    Project updateStatusProject(String Status, Long id)throws Exception;
 
     void AddUserToProject(Long projectId, Long userId)throws Exception;
 
@@ -57,5 +57,7 @@ public interface ProjectService {
     public List<Project> getExpiredProjects(User user);
 
     public List<Project> getDeletedProjectsByOwner(Long userId);
+
+    public void updateStatus(Long projectId, String newStatus);
 
 }

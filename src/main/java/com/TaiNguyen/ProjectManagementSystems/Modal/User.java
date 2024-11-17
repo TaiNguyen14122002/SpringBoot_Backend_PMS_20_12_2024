@@ -42,7 +42,8 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WorkingType> workTypes = new ArrayList<>();
 
-
-
+    @JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserIssueSalary> salaries = new ArrayList<>();
 
 }

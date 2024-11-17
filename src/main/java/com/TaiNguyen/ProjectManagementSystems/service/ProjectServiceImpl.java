@@ -120,12 +120,10 @@ public class ProjectServiceImpl implements ProjectService{
     }
 
     @Override
-    public Project updateProject(Project UpdateProject, Long id) throws Exception {
+    public Project updateStatusProject(String Status, Long id) throws Exception {
         Project project = getProjectById(id);
 
-        project.setName(UpdateProject.getName());
-        project.setDescription(UpdateProject.getDescription());
-        project.setTags(UpdateProject.getTags());
+        project.setStatus(Status);
 
         return projectRepository.save(project);
     }
@@ -368,6 +366,14 @@ public class ProjectServiceImpl implements ProjectService{
     @Override
     public List<Project> getDeletedProjectsByOwner(Long userId) {
         return projectRepository.findByOwnerIdAndAction(userId, -1);
+    }
+
+    @Override
+    public void updateStatus(Long projectId, String newStatus) {
+        Project project = projectRepository.findById(projectId).get();
+
+        project.setStatus(newStatus);
+        projectRepository.save(project);
     }
 
 

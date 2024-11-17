@@ -25,11 +25,22 @@ public class IssueDTO {
 
     private String priority;
 
+    private LocalDate startDate;
+
     private LocalDate dueDate;
 
     private List<String> tags = new ArrayList<>();
 
     private Project project;
 
+
     private User assignes;
+
+    private String price;
+
+    private String finish;
+
+    private List<UserIssueSalaryDTO> userIssueSalaries;
+
+//    private UserIssueSalaryDTO userIssueSalaries;
 }

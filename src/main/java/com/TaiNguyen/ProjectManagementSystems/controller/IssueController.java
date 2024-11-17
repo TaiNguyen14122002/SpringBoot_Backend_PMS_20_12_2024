@@ -2,11 +2,10 @@ package com.TaiNguyen.ProjectManagementSystems.controller;
 
 import com.TaiNguyen.ProjectManagementSystems.Modal.Issue;
 import com.TaiNguyen.ProjectManagementSystems.Modal.IssueDTO;
-import com.TaiNguyen.ProjectManagementSystems.Modal.Project;
 import com.TaiNguyen.ProjectManagementSystems.Modal.User;
 import com.TaiNguyen.ProjectManagementSystems.repository.IssueRepository;
+import com.TaiNguyen.ProjectManagementSystems.repository.UserRepository;
 import com.TaiNguyen.ProjectManagementSystems.request.IssueRequest;
-import com.TaiNguyen.ProjectManagementSystems.response.AuthResponse;
 import com.TaiNguyen.ProjectManagementSystems.response.MessageResponse;
 import com.TaiNguyen.ProjectManagementSystems.service.IssueService;
 import com.TaiNguyen.ProjectManagementSystems.service.UserService;
@@ -14,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
@@ -29,6 +29,8 @@ public class IssueController {
     private UserService userService;
     @Autowired
     private IssueRepository issueRepository;
+    @Autowired
+    private UserRepository userRepository;
 
     @GetMapping("/{issueId}")
     public ResponseEntity<Issue> getIssueById(@PathVariable Long issueId) throws Exception {
@@ -74,6 +76,8 @@ public class IssueController {
         issueDTO.setTitle(createdIssue.getTitle());
         issueDTO.setTags(createdIssue.getTags());
         issueDTO.setAssignes(createdIssue.getAssignee());
+        issueDTO.setPrice(createdIssue.getPrice());
+        issueDTO.setFinish(createdIssue.getFinish());
 
         return ResponseEntity.ok(issueDTO);
     }
@@ -107,19 +111,14 @@ public class IssueController {
         return ResponseEntity.ok(issue);
     }
 
-//    @GetMapping("/project/{projectId}/status")
-//    public ResponseEntity<?> getIssuesCountByStatus(@RequestHeader("Authorization") String token,
-//                                                    @PathVariable Long projectId) throws Exception {
-//        User user = userService.findUserProfileByJwt(token);
-//
-//        boolean isOwner = issueService.checkProjectOwner(projectId, user.getId());
-//        if(!isOwner){
-//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Bạn không có quyền truy cập thông tin này");
-//        }
-//
-//        var issueConuts = issueService.getIssueCountByStatus(projectId);
-//        return ResponseEntity.ok(issueConuts);
-//    }
+    @PutMapping("/{issueId}/finish/{finish}")
+    public ResponseEntity<Issue> updateFinishIssue(@PathVariable String finish, @PathVariable Long issueId) throws  Exception{
+        Issue issue = issueService.updateFinishIssue(issueId, finish);
+
+        return ResponseEntity.ok(issue);
+    }
+
+
 
     @GetMapping("/project/{projectId}/status")
     public ResponseEntity<?> getIssuesCountByStatus(@RequestHeader("Authorization") String token,
@@ -223,6 +222,19 @@ public class IssueController {
         User user = userService.findUserProfileByJwt(jwt);
         List<Issue> issues = issueService.getAllIssuesByOwnerId(user.getId());
         return ResponseEntity.ok(issues);
+    }
+
+
+    @GetMapping("/projects/{projectId}/issues")
+    public List<IssueDTO> getIssuesByProject(@PathVariable long projectId) throws Exception {
+        return issueService.getIssuesByProject(projectId);
+    }
+
+    @GetMapping("/users/issues")
+    public List<IssueDTO> getIssueByUser(@RequestHeader("Authorization") String jwt) throws Exception {
+            User user = userService.findUserProfileByJwt(jwt);
+            return issueService.getIssuesByUser(user.getId());
+
     }
 
 
