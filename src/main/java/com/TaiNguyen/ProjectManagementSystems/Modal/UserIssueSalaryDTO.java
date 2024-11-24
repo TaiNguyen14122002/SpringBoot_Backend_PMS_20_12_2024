@@ -9,6 +9,7 @@ public class UserIssueSalaryDTO {
 
     private long id;
 
+    private Issue issue;
     private User user;
     private BigDecimal salary;
     public String currency;

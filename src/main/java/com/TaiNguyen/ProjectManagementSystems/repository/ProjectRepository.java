@@ -3,8 +3,10 @@ package com.TaiNguyen.ProjectManagementSystems.repository;
 import com.TaiNguyen.ProjectManagementSystems.Modal.Project;
 import com.TaiNguyen.ProjectManagementSystems.Modal.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -66,5 +68,13 @@ public interface ProjectRepository extends JpaRepository<Project,Long> {
     Optional<Project> findById(Long id);
 
     List<Project> findByEndDateIsNotNull();
+
+    @Transactional
+    @Modifying
+    @Query(value = "DELETE FROM project_file_names  WHERE project_id = :projectId AND file_names = :fileName", nativeQuery = true)
+    void deleteFileNameFromProject(@Param("projectId") Long projectId, @Param("fileName") String fileName);
+
+    @Query("SELECT p FROM Project p WHERE p.owner = :owner AND (p.action = 0 OR p.action = 1)")
+    List<Project> findProjectsByOwner(@Param("owner") User owner);
 
 }

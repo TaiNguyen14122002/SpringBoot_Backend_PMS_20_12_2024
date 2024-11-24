@@ -5,7 +5,9 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import okhttp3.internal.concurrent.Task;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +30,9 @@ public class Project {
 
     @ElementCollection
     private List<String> fileNames = new ArrayList<>();
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FileInfo> files = new ArrayList<>();
 
     @ElementCollection
     private List<String> goals = new ArrayList<>();
@@ -59,5 +64,8 @@ public class Project {
     @JsonIgnore
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WorkingType> workTypes = new ArrayList<>();
+
+    private BigDecimal fundingAmount = BigDecimal.ZERO;  // Tiền cấp cho dự án
+    private BigDecimal profitAmount = BigDecimal.ZERO;  // Tiền lời của dự án
 
 }

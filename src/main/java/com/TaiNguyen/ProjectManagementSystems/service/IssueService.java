@@ -57,4 +57,8 @@ public interface IssueService {
     public List<IssueDTO> getIssuesByUser(long userId);
 
     public List<Object[]> getAllIssuesWithSalaryByUserId(long userId) throws Exception;
+
+    public List<Issue> getExpiringIssues(User assignee) throws Exception;
+
+    public List<Issue> getExpiredIssues(User assignee) throws Exception;
 }

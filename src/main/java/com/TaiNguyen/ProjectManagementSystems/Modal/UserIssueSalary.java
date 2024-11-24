@@ -1,14 +1,13 @@
 package com.TaiNguyen.ProjectManagementSystems.Modal;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
 @Entity
 @Data
+
 public class UserIssueSalary {
 
     @Id

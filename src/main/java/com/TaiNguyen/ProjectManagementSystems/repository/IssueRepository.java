@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface IssueRepository extends JpaRepository<Issue, Long> {
@@ -77,5 +78,10 @@ public interface IssueRepository extends JpaRepository<Issue, Long> {
             "WHERE u.user.id = :userId")
     List<Object[]> findAllIssuesWithSalaryByUserId(@Param("userId") Long userId);
 
+    List<Issue> findByProjectIdAndAssigneeId(long projectId, long assigneeId);
+
+    List<Issue> findByAssigneeAndDueDateBetweenAndStatusNot(User assignee, LocalDate startDate, LocalDate endDate, String status);
+
+    List<Issue> findByAssigneeAndDueDateBeforeAndStatusNot(User assignee, LocalDate endDate, String status);
 
 }

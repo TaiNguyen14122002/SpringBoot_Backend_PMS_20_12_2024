@@ -1,17 +1,13 @@
 package com.TaiNguyen.ProjectManagementSystems.service;
 
-import com.TaiNguyen.ProjectManagementSystems.Modal.Chat;
-import com.TaiNguyen.ProjectManagementSystems.Modal.Project;
-import com.TaiNguyen.ProjectManagementSystems.Modal.User;
-import com.TaiNguyen.ProjectManagementSystems.repository.ProjectRepository;
+import com.TaiNguyen.ProjectManagementSystems.Modal.*;
+import com.TaiNguyen.ProjectManagementSystems.repository.*;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -34,6 +30,29 @@ public class ProjectServiceImpl implements ProjectService{
 
     @Autowired
     private WorkingTypeService workingTypeService;
+    @Autowired
+    private TaskCategoryRepository taskCategoryRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private UserIssueSalaryRepository userIssueSalaryRepository;
+
+    @Autowired
+    private DatabaseService databaseService;
+    @Autowired
+    private IssueRepository issueRepository;
+
+    private void createDefaultTaskCategories(Project project){
+        List<String> defaultLabel = List.of("Chưa làm", "Đang làm", "Hoàn thành");
+
+        for(String label : defaultLabel){
+            TaskCategory taskCategory = new TaskCategory();
+            taskCategory.setLabel(label);
+            taskCategory.setProject(project);
+            taskCategoryRepository.save(taskCategory);
+        }
+    }
 
 
 
@@ -56,6 +75,7 @@ public class ProjectServiceImpl implements ProjectService{
         createdProject.setFileNames(project.getFileNames());
         createdProject.setGoals(project.getGoals());
         createdProject.setEndDate(project.getEndDate());
+        createdProject.setFundingAmount(project.getFundingAmount());
 
 
 
@@ -73,6 +93,9 @@ public class ProjectServiceImpl implements ProjectService{
 
         Chat projectChat = chatService.createChat(chat) ;
         savedProject.setChat(projectChat);
+
+        createDefaultTaskCategories(savedProject);
+
         return savedProject;
     }
 
@@ -374,6 +397,149 @@ public class ProjectServiceImpl implements ProjectService{
 
         project.setStatus(newStatus);
         projectRepository.save(project);
+    }
+
+    @Override
+    public List<ProjectDetailsDTO> getProjectByOwner(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<Project> projects = projectRepository.findByOwnerId(userId);
+
+        return projects.stream().map(project -> {
+            List<String> teamMembers = project.getTeam().stream()
+                    .map(member -> member.getFullname())
+                    .collect(Collectors.toList());
+
+            List<String> issues = project.getIssues().stream()
+                    .map(issue -> issue.getTitle())
+                    .collect(Collectors.toList());
+
+            return new ProjectDetailsDTO(
+                    project.getId(),
+                    project.getName(),
+                    teamMembers,
+                    issues,
+                    project.getFundingAmount(),
+                    project.getProfitAmount(),
+                    project.getStatus()
+            );
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public void updateProfitAmount(long projectId) {
+        Optional<Project> projectOptional = projectRepository.findById(projectId);
+
+        if(projectOptional.isPresent()) {
+            Project project = projectOptional.get();
+
+            List<Issue> issues = project.getIssues();
+
+            BigDecimal totalSalary = BigDecimal.ZERO;
+
+            for(Issue issue : issues) {
+                List<UserIssueSalary> salaries = issue.getSalaries();
+                for(UserIssueSalary salary : salaries) {
+                    totalSalary = totalSalary.add(salary.getSalary());
+                }
+            }
+            System.out.println("Family"+totalSalary);
+            BigDecimal profitAmount = project.getFundingAmount().subtract(totalSalary);
+            project.setProfitAmount(profitAmount);
+            projectRepository.save(project);
+        }else {
+            throw new RuntimeException("Project not found");
+        }
+    }
+
+    @Transactional
+    @Override
+    public void deleteFileName(Long projectId, String fileName) {
+        databaseService.enableSafeMode();
+        projectRepository.deleteFileNameFromProject(projectId, fileName);
+    }
+
+    @Override
+    public List<IssueSalaryDTO> getIssueAndSalariesByProjectId(Long projectId) {
+        List<Issue> issues = issueRepository.findByProjectId(projectId);
+        List<IssueSalaryDTO> result = new ArrayList<>();
+        for(Issue issue : issues) {
+            List<UserIssueSalary> salaries = userIssueSalaryRepository.findByIssue(issue);
+            result.add(new IssueSalaryDTO(issue, salaries));
+        }
+        return result;
+    }
+
+    @Override
+    public List<Project> getProjectsByOwnerAndAction(User owner) {
+        return projectRepository.findProjectsByOwner(owner);
+    }
+
+    @Override
+    public ProjectDetailsResponse getProjectDetailsByProjectId(Long projectId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Project not found with ID: " + projectId));
+
+        // Lấy danh sách thành viên của dự án và tính toán thông tin
+        List<TeamMemberResponse> teamMembers = project.getIssues().stream()
+                .map(issue -> issue.getAssignee()) // Lấy người được giao nhiệm vụ
+                .distinct() // Loại bỏ trùng lặp người dùng
+                .map(user -> {
+                    // Lọc nhiệm vụ của người dùng trong dự án hiện tại
+                    List<IssueDetailsResponse> issues = user.getAssignedIssues().stream()
+                            .filter(issue -> issue.getProject().getId() == projectId) // Lọc nhiệm vụ thuộc dự án
+                            .map(issue -> new IssueDetailsResponse(
+                                    issue.getId(),
+                                    issue.getTitle(),
+                                    issue.getDescription(),
+                                    issue.getStatus(),
+                                    issue.getPriority(),
+                                    String.join(", ", issue.getTags()),
+                                    issue.getSalaries().stream()
+                                            .filter(s -> s.getUser().equals(user)) // Lọc `UserId`
+                                            .map(s -> s.getSalary().toString())
+                                            .findFirst()
+                                            .orElse("0") // Mặc định nếu không tìm thấy
+                            ))
+                            .collect(Collectors.toList());
+
+                    // Tính tổng thực hưởng `salary` cho các Issue của User trong dự án
+                    BigDecimal totalSalaryIssue = user.getSalaries().stream()
+                            .filter(s -> s.getIssue().getProject().getId() == projectId) // Lọc `ProjectId`
+                            .map(UserIssueSalary::getSalary)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                    // Trả về thông tin thành viên
+                    return new TeamMemberResponse(
+                            user.getId(),
+                            user.getFullname(),
+                            user.getEmail(),
+                            user.getPhone(),
+                            user.getCompany(),
+                            user.getProgramerposition(),
+                            user.getCreatedDate(),
+                            user.getAvatar(),
+                            issues,
+                            totalSalaryIssue // Tổng lương của các nhiệm vụ thuộc dự án
+                    );
+                }).collect(Collectors.toList());
+        // Trả về thông tin chi tiết dự án
+
+        return new ProjectDetailsResponse(
+                project.getId(),
+                project.getName(),
+                project.getDescription(),
+                project.getCategory(),
+                project.getTags(),
+                project.getFileNames(),
+                project.getGoals(),
+                project.getCreatedDate(),
+                project.getEndDate(),
+                project.getStatus(),
+                project.getFundingAmount(),
+                project.getProfitAmount(),
+                teamMembers
+        );
     }
 
 

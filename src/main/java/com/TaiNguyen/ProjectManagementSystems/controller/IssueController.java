@@ -237,5 +237,17 @@ public class IssueController {
 
     }
 
+    @GetMapping("/expiring")
+    public List<Issue> getExpiringIssues(@RequestHeader("Authorization") String jwt) throws Exception {
+        User user = userService.findUserProfileByJwt(jwt);
+        return issueService.getExpiringIssues(user);
+    }
+
+    @GetMapping("/expired")
+    public List<Issue> getExpiredIssues (@RequestHeader("Authorization") String jwt) throws Exception {
+        User user = userService.findUserProfileByJwt(jwt);
+        return issueService.getExpiredIssues(user);
+    }
+
 
 }

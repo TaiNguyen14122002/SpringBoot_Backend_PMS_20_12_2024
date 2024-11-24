@@ -28,6 +28,9 @@ public class User {
     private String introduce;
     private String avatar;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FileInfo> avatarsFileInfo = new ArrayList<>();
+
     //An Mat Khau
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;

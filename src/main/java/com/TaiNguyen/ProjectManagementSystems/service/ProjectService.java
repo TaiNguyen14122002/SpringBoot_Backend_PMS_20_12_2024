@@ -1,8 +1,6 @@
 package com.TaiNguyen.ProjectManagementSystems.service;
 
-import com.TaiNguyen.ProjectManagementSystems.Modal.Chat;
-import com.TaiNguyen.ProjectManagementSystems.Modal.Project;
-import com.TaiNguyen.ProjectManagementSystems.Modal.User;
+import com.TaiNguyen.ProjectManagementSystems.Modal.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -59,5 +57,17 @@ public interface ProjectService {
     public List<Project> getDeletedProjectsByOwner(Long userId);
 
     public void updateStatus(Long projectId, String newStatus);
+
+    public List<ProjectDetailsDTO> getProjectByOwner(Long userId);
+
+    public void updateProfitAmount(long projectId);
+
+    public void deleteFileName(Long projectId, String fileName);
+
+    public List<IssueSalaryDTO> getIssueAndSalariesByProjectId(Long projectId);
+
+    public List<Project> getProjectsByOwnerAndAction(User owner);
+
+    public ProjectDetailsResponse getProjectDetailsByProjectId(Long projectId);
 
 }

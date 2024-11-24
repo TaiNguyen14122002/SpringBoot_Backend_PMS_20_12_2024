@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestHeader;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -62,7 +63,7 @@ public class IssueServiceImpl implements IssueService{
         Issue issue = new Issue();
         issue.setTitle(issueRequest.getTitle());
         issue.setDescription(issueRequest.getDescription());
-        issue.setStatus("pending");
+        issue.setStatus("Chưa làm");
         issue.setProjectID(issueRequest.getProjectId());
         issue.setPriority(issueRequest.getPriority());
         issue.setDueDate(issueRequest.getDueDate());
@@ -339,4 +340,21 @@ public class IssueServiceImpl implements IssueService{
     public List<Object[]> getAllIssuesWithSalaryByUserId(long userId) throws Exception {
         return issueRepository.findAllIssuesWithSalaryByUserId(userId);
     }
+
+    @Override
+    public List<Issue> getExpiringIssues(User assignee) throws Exception {
+        LocalDate currentDate = LocalDate.now();
+        System.out.println("Current Date: " + currentDate);
+        LocalDate endDate = currentDate.plusDays(7);
+        return issueRepository.findByAssigneeAndDueDateBetweenAndStatusNot(
+                assignee, currentDate, endDate, "Hoàn thành");
+    }
+
+    @Override
+    public List<Issue> getExpiredIssues(User assignee) throws Exception {
+        LocalDate currentDate = LocalDate.now();
+        return issueRepository.findByAssigneeAndDueDateBeforeAndStatusNot(assignee, currentDate, "Hoàn thành");
+    }
+
+
 }

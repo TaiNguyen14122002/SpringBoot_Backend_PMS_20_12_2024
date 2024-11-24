@@ -1,8 +1,10 @@
 package com.TaiNguyen.ProjectManagementSystems.controller;
 
+import com.TaiNguyen.ProjectManagementSystems.Modal.Issue;
 import com.TaiNguyen.ProjectManagementSystems.Modal.Project;
 import com.TaiNguyen.ProjectManagementSystems.Modal.User;
 import com.TaiNguyen.ProjectManagementSystems.service.ExcelExportService;
+import com.TaiNguyen.ProjectManagementSystems.service.PdfService;
 import com.TaiNguyen.ProjectManagementSystems.service.ProjectService;
 import com.TaiNguyen.ProjectManagementSystems.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,9 @@ public class ExportController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private PdfService pdfService;
+
     @GetMapping("/projects/{projectId}/issues/export")
     public ResponseEntity<byte[]> exportToExcel(@RequestHeader("Authorization") String jwt, @PathVariable long projectId) throws Exception {
         User user = userService.findUserProfileByJwt(jwt);
@@ -39,12 +44,12 @@ public class ExportController {
             headers.add("Content-Disposition", "attachment; filename=issues_report.xlsx"); // Đặt tên file khi tải về
             headers.add("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"); // Đảm bảo loại tệp là Excel
 
-//            return ResponseEntity.ok()
-//                    .headers(headers)
-//                    .body(excelFile);
             return new ResponseEntity<>(excelFile, headers, HttpStatus.OK);
         }
         return ResponseEntity.notFound().build();
-
     }
+
+//    public ResponseEntity<byte[]> getUserTasksReport(@PathVariable long userID) throws Exception {
+//        List<Issue> issues = projectService.
+//    }
 }

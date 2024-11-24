@@ -1,9 +1,6 @@
 package com.TaiNguyen.ProjectManagementSystems.controller;
 
-import com.TaiNguyen.ProjectManagementSystems.Modal.Chat;
-import com.TaiNguyen.ProjectManagementSystems.Modal.Invitation;
-import com.TaiNguyen.ProjectManagementSystems.Modal.Project;
-import com.TaiNguyen.ProjectManagementSystems.Modal.User;
+import com.TaiNguyen.ProjectManagementSystems.Modal.*;
 import com.TaiNguyen.ProjectManagementSystems.repository.InviteRequest;
 import com.TaiNguyen.ProjectManagementSystems.repository.NotificationRepository;
 import com.TaiNguyen.ProjectManagementSystems.repository.ProjectRepository;
@@ -18,9 +15,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/projects")
@@ -44,6 +44,9 @@ public class ProjectController {
     private WorkingTypeService workingTypeService;
     @Autowired
     private NotificationRepository notificationRepository;
+
+    @Autowired
+    private DatabaseService databaseService;
 
     @PutMapping("/uploadFileToProject/{projectId}/upload")
     public String uploadFile(@PathVariable Long projectId, @RequestBody Project files) throws Exception {
@@ -300,14 +303,162 @@ public class ProjectController {
         }
     }
 
-//    @PutMapping("{projectId}/status")
-//    public ResponseEntity<String> updateProjectStatus(@PathVariable Long projectId, @RequestParam String status) throws Exception {
-//        try {
-//            projectService.updateStatus(projectId, status);
-//            return ResponseEntity.ok("Cập nhập status thành công");
-//        }catch(Exception e){
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Có lỗi xảy ra");
-//        }
-//    }
+    @GetMapping("/owner/statistical")
+    public List<ProjectDetailsDTO> getProjectSByOwner(@RequestHeader("Authorization") String jwt) throws Exception {
+        User user = userService.findUserProfileByJwt(jwt);
+        return projectService.getProjectByOwner(user.getId());
+    }
+
+    @PutMapping("/{projectId}/update-profit")
+    public ResponseEntity<String> updateProfitAmount(@PathVariable long projectId){
+        try {
+            projectService.updateProfitAmount(projectId);
+            return ResponseEntity.ok("Profit amount updated successfully.");
+
+        }catch(Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{projectId}/deleteFileName")
+    public ResponseEntity<String> deleteFileName(
+            @PathVariable Long projectId,
+            @RequestParam String fileName) {
+        try {
+            projectService.deleteFileName(projectId, fileName);
+            return ResponseEntity.ok("File deleted successfully");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error deleting file");
+        }
+    }
+
+    @GetMapping("/{projectId}/Export/PDF")
+    public ResponseEntity<Map<String, Object>> getProjectDetails(@PathVariable Long projectId) throws Exception {
+        Project project = projectService.getProjectById(projectId);
+
+        List<IssueSalaryDTO> issueSalaries = projectService.getIssueAndSalariesByProjectId(project.getId());
+
+        Map<String, Object> response = Map.of(
+                "project", project,
+                "issueWithSalaries", issueSalaries
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/Members/{projectId}")
+    public ProjectUserDTO getProjectWithMembers(@PathVariable long projectId){
+        Project project = projectRepository.findById(projectId).orElseThrow(() -> new RuntimeException("Project not found"));
+
+        List<UserDTO> teamMembers = project.getTeam().stream()
+                .map(user -> new UserDTO(
+                        user.getId(),
+                        user.getFullname(),
+                        user.getEmail(),
+                        user.getPhone(),
+                        user.getCompany(),
+                        user.getProgramerposition(),
+                        user.getCreatedDate(),
+                        user.getAvatar()
+                )).collect(Collectors.toList());
+
+        return new ProjectUserDTO(
+                project.getId(),
+                project.getName(),
+                project.getDescription(),
+                project.getCategory(),
+                project.getTags(),
+                project.getFileNames(),
+                project.getGoals(),
+                project.getCreatedDate(),
+                project.getEndDate(),
+                project.getStatus(),
+                project.getFundingAmount(),
+                project.getProfitAmount(),
+                teamMembers
+
+        );
+    }
+
+    @GetMapping("/owner/action")
+    public List<Project> getProjectsByOwner(@RequestHeader("Authorization") String jwt) throws Exception {
+        User user = userService.findUserProfileByJwt(jwt);
+        if(user == null){
+            throw new RuntimeException("User not found");
+        }
+        return projectService.getProjectsByOwnerAndAction(user);
+    }
+
+    @GetMapping("/{projectId}/detailsMembers")
+    public ProjectDetailsResponse getProjectDetailsMembers(@PathVariable Long projectId) {
+        // Lấy thông tin dự án
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Project not found with ID: " + projectId));
+
+        // Lấy danh sách thành viên của dự án và tính toán thông tin
+        List<TeamMemberResponse> teamMembers = project.getIssues().stream()
+                .map(issue -> issue.getAssignee()) // Lấy người được giao nhiệm vụ
+                .distinct() // Loại bỏ trùng lặp người dùng
+                .map(user -> {
+                    // Lọc nhiệm vụ của người dùng trong dự án hiện tại
+                    List<IssueDetailsResponse> issues = user.getAssignedIssues() .stream()
+                            .filter(issue -> issue.getProject().getId() == projectId) // Lọc nhiệm vụ thuộc dự án
+                            .map(issue -> new IssueDetailsResponse(
+                                    issue.getId(),
+                                    issue.getTitle(),
+                                    issue.getDescription(),
+                                    issue.getStatus(),
+                                    issue.getPriority(),
+                                    String.join(", ", issue.getTags()),
+                                    issue.getSalaries().stream()
+                                            .filter(s -> s.getUser().equals(user)) // Lọc `UserId`
+                                            .map(s -> s.getSalary().toString())
+                                            .findFirst()
+                                            .orElse("0") // Mặc định nếu không tìm thấy
+                            ))
+                            .collect(Collectors.toList());
+
+                    // Tính tổng thực hưởng `salary` cho các Issue của User trong dự án
+                    BigDecimal totalSalaryIssue = user.getSalaries().stream()
+                            .filter(s -> s.getIssue().getProject().getId() == projectId) // Lọc `ProjectId`
+                            .map(UserIssueSalary::getSalary)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                    // Trả về thông tin thành viên
+                    return new TeamMemberResponse(
+                            user.getId(),
+                            user.getFullname(),
+                            user.getEmail(),
+                            user.getPhone(),
+                            user.getCompany(),
+                            user.getProgramerposition(),
+                            user.getCreatedDate(),
+                            user.getAvatar(),
+                            issues,
+                            totalSalaryIssue // Tổng lương của các nhiệm vụ thuộc dự án
+                    );
+                }).collect(Collectors.toList());
+
+        // Trả về thông tin chi tiết dự án
+        return new ProjectDetailsResponse(
+                project.getId(),
+                project.getName(),
+                project.getDescription(),
+                project.getCategory(),
+                project.getTags(),
+                project.getFileNames(),
+                project.getGoals(),
+                project.getCreatedDate(),
+                project.getEndDate(),
+                project.getStatus(),
+                project.getFundingAmount(),
+                project.getProfitAmount(),
+                teamMembers
+        );
+    }
+
+
+
+
 
 }
