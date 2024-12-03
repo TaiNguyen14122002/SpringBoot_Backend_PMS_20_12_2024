@@ -3,8 +3,10 @@ package com.TaiNguyen.ProjectManagementSystems.service;
 import com.TaiNguyen.ProjectManagementSystems.Modal.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public interface ProjectService {
 
@@ -69,5 +71,11 @@ public interface ProjectService {
     public List<Project> getProjectsByOwnerAndAction(User owner);
 
     public ProjectDetailsResponse getProjectDetailsByProjectId(Long projectId);
+
+    public Optional<Project> updateEndDate(long projectId, LocalDate endDate);
+
+    public Project updateProject(long id, Project project);
+
+    public Optional<Project> findById(Long projectId);
 
 }

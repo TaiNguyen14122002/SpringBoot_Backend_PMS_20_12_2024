@@ -88,6 +88,13 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
+    @PutMapping("/updateUser")
+    public ResponseEntity<User> updateUser(@RequestHeader("Authorization") String jwt, @RequestBody User user) throws Exception {
+        User userr = userService.findUserProfileByJwt(jwt);
+        User updateuser = userService.updateUser(userr.getId(), user);
+        return ResponseEntity.ok(updateuser);
+    }
+
 
 
 }

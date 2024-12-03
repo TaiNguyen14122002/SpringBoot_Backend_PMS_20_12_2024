@@ -45,6 +45,7 @@ public class Issue {
     @ElementCollection
     private List<String> fileNames = new ArrayList<>();
 
+    @JsonIgnore
     @OneToMany(mappedBy = "issue", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FileInfo> fileInfos = new ArrayList<>();
 

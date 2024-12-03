@@ -31,6 +31,7 @@ public class Project {
     @ElementCollection
     private List<String> fileNames = new ArrayList<>();
 
+    @JsonIgnore
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FileInfo> files = new ArrayList<>();
 

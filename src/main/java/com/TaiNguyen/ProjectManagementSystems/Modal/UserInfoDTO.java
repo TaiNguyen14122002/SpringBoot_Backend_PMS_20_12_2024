@@ -16,4 +16,5 @@ public class UserInfoDTO {
     private String phone;
     private String avatar;
     private Long issues; // Đổi từ int sang Long
+    private String fileName;
 }

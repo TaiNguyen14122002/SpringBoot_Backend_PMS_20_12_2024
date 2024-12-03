@@ -1,6 +1,7 @@
 package com.TaiNguyen.ProjectManagementSystems.repository;
 
 import com.TaiNguyen.ProjectManagementSystems.Modal.Issue;
+import com.TaiNguyen.ProjectManagementSystems.Modal.Project;
 import com.TaiNguyen.ProjectManagementSystems.Modal.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -8,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface IssueRepository extends JpaRepository<Issue, Long> {
 
@@ -84,4 +86,7 @@ public interface IssueRepository extends JpaRepository<Issue, Long> {
 
     List<Issue> findByAssigneeAndDueDateBeforeAndStatusNot(User assignee, LocalDate endDate, String status);
 
+    List<Issue> findByAssigneeId(long assigneeId);
+
+    Optional<Issue> findByIdAndProject(long issueId, Project project);
 }

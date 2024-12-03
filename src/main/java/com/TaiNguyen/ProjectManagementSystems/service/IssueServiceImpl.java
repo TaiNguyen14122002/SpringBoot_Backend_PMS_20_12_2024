@@ -356,5 +356,17 @@ public class IssueServiceImpl implements IssueService{
         return issueRepository.findByAssigneeAndDueDateBeforeAndStatusNot(assignee, currentDate, "Hoàn thành");
     }
 
+    @Override
+    public Issue updateDueDate(Long issueId, LocalDate dueDate) {
+        Issue issue = issueRepository.findById(issueId).orElseThrow(() -> new RuntimeException("Issue not found"));
+        issue.setDueDate(dueDate);
+        return issueRepository.save(issue);
+    }
+
+    @Override
+    public Optional<Issue> findByIdAndProject(long issueId, Project project) {
+        return issueRepository.findByIdAndProject(issueId, project);
+    }
+
 
 }

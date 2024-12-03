@@ -340,11 +340,9 @@ public class ProjectServiceImpl implements ProjectService{
                 throw new RuntimeException("Chỉ chủ dự án mới có thể chỉnh sửa");
             }
 
-            else{if(project.getAction() != -1 )
-            {
                 project.setAction(action);
                 projectRepository.save(project);
-            }}
+
 
         }catch (Exception e){
             e.printStackTrace();
@@ -540,6 +538,48 @@ public class ProjectServiceImpl implements ProjectService{
                 project.getProfitAmount(),
                 teamMembers
         );
+    }
+
+    @Override
+    public Optional<Project> updateEndDate(long projectId, LocalDate endDate) {
+        Optional<Project> projectOpt = projectRepository.findById(projectId);
+        if(projectOpt.isPresent()){
+            Project project = projectOpt.get();
+            project.setEndDate(endDate);
+            return Optional.of(projectRepository.save(project));
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public Project updateProject(long id, Project project) {
+        System.out.println("Dữ liệu nhận được từ frontend: " + project);
+        Optional<Project> projectOptional = projectRepository.findById(id);
+        if (projectOptional.isPresent()) {
+            Project existingProject = projectOptional.get();
+
+            // Cập nhật các trường của dự án
+            if (project.getName() != null && !project.getName().equals(existingProject.getName())) {
+                existingProject.setName(project.getName());
+            }
+            if (project.getDescription() != null && !project.getDescription().equals(existingProject.getDescription())) {
+                existingProject.setDescription(project.getDescription());
+            }
+            if (project.getGoals() != null && !project.getGoals().equals(existingProject.getGoals())) {
+                existingProject.setGoals(project.getGoals());
+            }
+            if (project.getEndDate() != null && !project.getEndDate().equals(existingProject.getEndDate())) {
+                existingProject.setEndDate(project.getEndDate());
+            }
+            return projectRepository.save(existingProject);
+        } else {
+            throw new RuntimeException("Project not found with id: " + id);
+        }
+    }
+
+    @Override
+    public Optional<Project> findById(Long projectId) {
+        return projectRepository.findById(projectId);
     }
 
 

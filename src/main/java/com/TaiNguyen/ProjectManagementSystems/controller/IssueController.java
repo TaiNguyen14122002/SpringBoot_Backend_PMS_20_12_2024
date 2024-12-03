@@ -1,22 +1,24 @@
 package com.TaiNguyen.ProjectManagementSystems.controller;
 
-import com.TaiNguyen.ProjectManagementSystems.Modal.Issue;
-import com.TaiNguyen.ProjectManagementSystems.Modal.IssueDTO;
-import com.TaiNguyen.ProjectManagementSystems.Modal.User;
+import com.TaiNguyen.ProjectManagementSystems.Modal.*;
 import com.TaiNguyen.ProjectManagementSystems.repository.IssueRepository;
+import com.TaiNguyen.ProjectManagementSystems.repository.UserIssueSalaryRepository;
 import com.TaiNguyen.ProjectManagementSystems.repository.UserRepository;
 import com.TaiNguyen.ProjectManagementSystems.request.IssueRequest;
 import com.TaiNguyen.ProjectManagementSystems.response.MessageResponse;
-import com.TaiNguyen.ProjectManagementSystems.service.IssueService;
-import com.TaiNguyen.ProjectManagementSystems.service.UserService;
+import com.TaiNguyen.ProjectManagementSystems.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/issues")
@@ -31,6 +33,15 @@ public class IssueController {
     private IssueRepository issueRepository;
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private ProjectService projectService;
+
+    @Autowired
+    private IssueExportExcelService issueExportExcelService;
+
+    @Autowired
+    private UserIssueSalaryRepository userIssueSalaryRepository;
 
     @GetMapping("/{issueId}")
     public ResponseEntity<Issue> getIssueById(@PathVariable Long issueId) throws Exception {
@@ -248,6 +259,92 @@ public class IssueController {
         User user = userService.findUserProfileByJwt(jwt);
         return issueService.getExpiredIssues(user);
     }
+
+    @PutMapping({"/{issueId}/due-date"})
+    public ResponseEntity<Issue> updateDueDate(@PathVariable Long issueId, @RequestBody LocalDate dueDate){
+        Issue updatedIssue = issueService.updateDueDate(issueId, dueDate);
+        return ResponseEntity.ok(updatedIssue);
+    }
+
+    @GetMapping("/api/export/issues/{projectId}")
+    public ResponseEntity<byte[]> exportIssueToExcel(@PathVariable long projectId){
+        try {
+            byte[] excelFile = issueExportExcelService.exportIssuesToExcel(projectId);
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Content-Disposition", "attachment; filename=issues.xls");
+            return ResponseEntity.ok().headers(headers).body(excelFile);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
+
+    @PutMapping("/update/{projectId}")
+    public String updateIssuesByProjectId(@PathVariable Long projectId, @RequestBody List<IssueUpdateDTO> issueUpdateDTOs){
+        // Kiểm tra sự tồn tại của project
+        Optional<Project> projectOptional = projectService.findById(projectId);
+        if (projectOptional.isEmpty()) {
+            return "Project not found";
+        }
+
+        Project project = projectOptional.get();
+        StringBuilder resultMessage = new StringBuilder();
+
+        // Duyệt qua từng IssueUpdateDTO trong danh sách
+        for (IssueUpdateDTO issueUpdateDTO : issueUpdateDTOs) {
+            // Tìm assignee theo email
+            User assigneeOptional = userService.findByEmail(issueUpdateDTO.getAssigneeEmail());
+            if (assigneeOptional == null) {
+                resultMessage.append("Assignee not found for issue ID: ").append(issueUpdateDTO.getId()).append("\n");
+                continue;
+            }
+            System.out.println(issueUpdateDTO.getAssigneeEmail());
+
+            User assignee = assigneeOptional;
+
+            // Tìm issue theo ID và project
+            Optional<Issue> issueOptional = issueService.findByIdAndProject(issueUpdateDTO.getId(), project);
+            if (issueOptional.isEmpty()) {
+                resultMessage.append("Issue not found in this project for issue ID: ").append(issueUpdateDTO.getId()).append("\n");
+                continue;
+            }
+
+            Issue issue = issueOptional.get();
+
+            // Tìm UserIssueSalary cho assignee và issue
+            Optional<UserIssueSalary> salaryOptional = userIssueSalaryRepository.findByUserAndIssue(assignee, issue);
+            if (salaryOptional.isEmpty()) {
+                resultMessage.append("Salary not found for issue ID: ").append(issueUpdateDTO.getId()).append("\n");
+                continue;
+            }
+
+            UserIssueSalary salary = salaryOptional.get();
+
+            // Cập nhật thông tin cho issue và salary
+            issue.setTitle(issueUpdateDTO.getTitle());
+            issue.setDescription(issueUpdateDTO.getDescription());
+            issue.setStatus(issueUpdateDTO.getStatus());
+            issue.setPriority(issueUpdateDTO.getPriority());
+            issue.setStartDate(issueUpdateDTO.getStartDate());
+            issue.setDueDate(issueUpdateDTO.getDueDate());
+            issue.setPrice(issueUpdateDTO.getPrice());
+            issue.setFinish(issueUpdateDTO.getFinish());
+            issue.setAssignee(assignee);
+
+            salary.setSalary(issueUpdateDTO.getSalary());
+            salary.setCurrency(issueUpdateDTO.getCurrency());
+            salary.setPaid(issueUpdateDTO.isPaid());
+
+            // Lưu thông tin đã cập nhật
+            issueRepository.save(issue);
+            userIssueSalaryRepository.save(salary);
+
+            resultMessage.append("Issue with ID: ").append(issueUpdateDTO.getId()).append(" updated successfully.\n");
+        }
+
+        // Trả về kết quả tổng hợp sau khi xử lý tất cả các issue
+        return resultMessage.toString();
+    }
+
 
 
 }

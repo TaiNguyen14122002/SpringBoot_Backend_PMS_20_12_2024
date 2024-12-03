@@ -18,4 +18,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     // Phương thức xóa thông báo theo projectId
     void deleteByProjectId(long projectId);
+
+    List<Notification> findByProjectIdIn(List<Long> projectIds);
 }

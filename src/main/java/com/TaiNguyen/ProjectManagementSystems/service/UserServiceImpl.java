@@ -1,5 +1,6 @@
 package com.TaiNguyen.ProjectManagementSystems.service;
 
+import com.TaiNguyen.ProjectManagementSystems.Modal.Project;
 import com.TaiNguyen.ProjectManagementSystems.Modal.User;
 import com.TaiNguyen.ProjectManagementSystems.Modal.UserInfoDTO;
 import com.TaiNguyen.ProjectManagementSystems.Utill.OTPService;
@@ -116,6 +117,48 @@ public class UserServiceImpl implements UserService{
         return userRepository.findAllUsersByProjectId(projectId);
     }
 
+    @Override
+    public User updateUser(long id, User user) {
+        Optional<User> optionalUser = userRepository.findById(id);
+        if (optionalUser.isPresent()) {
+            User existingUser = optionalUser.get();
+
+            // Cập nhật các trường của dự án
+            if (user.getFullname() != null && !user.getFullname().equals(existingUser.getFullname())) {
+                existingUser.setFullname(user.getFullname());
+            }
+            if (user.getEmail() != null && !user.getEmail().equals(existingUser.getEmail())) {
+                existingUser.setEmail(user.getEmail());
+            }
+            if (user.getAddress() != null && !user.getAddress().equals(existingUser.getAddress())) {
+                existingUser.setAddress(user.getAddress());
+            }
+            if (user.getPhone() != null && !user.getPhone().equals(existingUser.getPhone())) {
+                existingUser.setPhone(user.getPhone());
+            }
+            if (user.getCompany() != null && !user.getCompany().equals(existingUser.getCompany())) {
+                existingUser.setCompany(user.getCompany());
+            }
+            if (user.getProgramerposition() != null && !user.getProgramerposition().equals(existingUser.getProgramerposition())) {
+                existingUser.setProgramerposition(user.getProgramerposition());
+            }
+            if (user.getIntroduce() != null && !user.getIntroduce().equals(existingUser.getIntroduce())) {
+                existingUser.setIntroduce(user.getIntroduce());
+            }
+            if (user.getSelectedSkills() != null && !user.getSelectedSkills().equals(existingUser.getSelectedSkills())) {
+                existingUser.setSelectedSkills(user.getSelectedSkills());
+            }
+            return userRepository.save(existingUser);
+        } else {
+            throw new RuntimeException("User not found with id: " + id);
+        }
+    }
+
+    @Override
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
 
     @Override
     public User updateUsersProjectSize(User user, int number) {
@@ -125,6 +168,10 @@ public class UserServiceImpl implements UserService{
         }
         return null;
     }
+
+
+
+
 
 
 }

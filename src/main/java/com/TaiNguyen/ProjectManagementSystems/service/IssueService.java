@@ -7,6 +7,7 @@ import com.TaiNguyen.ProjectManagementSystems.Modal.User;
 import com.TaiNguyen.ProjectManagementSystems.request.IssueRequest;
 import jdk.jshell.spi.ExecutionControl;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -61,4 +62,10 @@ public interface IssueService {
     public List<Issue> getExpiringIssues(User assignee) throws Exception;
 
     public List<Issue> getExpiredIssues(User assignee) throws Exception;
+
+    public Issue updateDueDate(Long issueId, LocalDate dueDate);
+
+    public Optional<Issue> findByIdAndProject(long issueId, Project project);
+
+
 }

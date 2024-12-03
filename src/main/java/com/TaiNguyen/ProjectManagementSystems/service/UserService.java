@@ -4,6 +4,7 @@ import com.TaiNguyen.ProjectManagementSystems.Modal.User;
 import com.TaiNguyen.ProjectManagementSystems.Modal.UserInfoDTO;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface UserService {
     User findUserProfileByJwt(String jwt)throws Exception;
@@ -25,6 +26,10 @@ public interface UserService {
     String validateResetPasswordToken(String token) throws Exception;
 
     public List<UserInfoDTO> getUserInfoByProjectId(Long projectId);
+
+    public User updateUser ( long id, User user);
+
+    public User findByEmail(String email);
 
 
 

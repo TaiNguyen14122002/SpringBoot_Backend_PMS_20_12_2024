@@ -10,6 +10,7 @@ import com.TaiNguyen.ProjectManagementSystems.response.MessageResponse;
 import com.TaiNguyen.ProjectManagementSystems.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cglib.core.Local;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -455,6 +456,19 @@ public class ProjectController {
                 project.getProfitAmount(),
                 teamMembers
         );
+    }
+
+    @PutMapping("/{projectId}/endDate")
+    public ResponseEntity<Project> updateEndDate(@PathVariable long projectId, @RequestBody LocalDate endDate){
+        Optional<Project> updatedProject = projectService.updateEndDate(projectId, endDate);
+        return updatedProject.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/updateProject/{projectId}")
+    public ResponseEntity<Project> updateProject(@PathVariable long projectId, @RequestBody Project project){
+        Project updatedProject = projectService.updateProject(projectId, project);
+        return ResponseEntity.ok(updatedProject);
     }
 
 

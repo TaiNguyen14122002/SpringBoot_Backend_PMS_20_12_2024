@@ -1,5 +1,6 @@
 package com.TaiNguyen.ProjectManagementSystems.repository;
 
+import com.TaiNguyen.ProjectManagementSystems.Modal.Issue;
 import com.TaiNguyen.ProjectManagementSystems.Modal.Project;
 import com.TaiNguyen.ProjectManagementSystems.Modal.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -76,5 +77,7 @@ public interface ProjectRepository extends JpaRepository<Project,Long> {
 
     @Query("SELECT p FROM Project p WHERE p.owner = :owner AND (p.action = 0 OR p.action = 1)")
     List<Project> findProjectsByOwner(@Param("owner") User owner);
+
+
 
 }

@@ -28,6 +28,7 @@ public class User {
     private String introduce;
     private String avatar;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FileInfo> avatarsFileInfo = new ArrayList<>();
 
