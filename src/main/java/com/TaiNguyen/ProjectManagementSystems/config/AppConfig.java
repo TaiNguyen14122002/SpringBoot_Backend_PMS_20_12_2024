@@ -42,7 +42,8 @@ public class AppConfig {
                 CorsConfiguration cfg = new CorsConfiguration();
                 cfg.setAllowedOrigins(Arrays.asList(
 
-                        "http://localhost:5173"
+                        "http://localhost:5173",
+                        "https://react-js-project-management-systems.vercel.app"
 
                 ));
 
