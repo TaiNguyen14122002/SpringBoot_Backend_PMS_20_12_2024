@@ -38,8 +38,14 @@ public class UserController {
     }
 
     @PutMapping("/changePassword")
-    public ResponseEntity<?> changePassword(@RequestHeader("Authorization") String jwt, @RequestParam String newPassword) throws Exception {
+    public ResponseEntity<?> changePassword(@RequestHeader("Authorization") String jwt, @RequestParam String currentPassword, @RequestParam String newPassword) throws Exception {
         User user = userService.findUserProfileByJwt(jwt);
+
+        // Kiểm tra mật khẩu hiện tại
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            ErrorResponse error = new ErrorResponse("Mật khẩu hiện tại không chính xác.");
+            return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+        }
 
         if(!correctPassword.isValidPassword(newPassword)){
             ErrorResponse error = new ErrorResponse("Mật khẩu không hợp lệ. Mật khẩu phải chứa ít nhất 8 ký tự, bao gồm chữ thường, chữ hoa, số và ký tự đặc biệt.");

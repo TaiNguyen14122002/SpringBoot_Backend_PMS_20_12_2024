@@ -5,15 +5,15 @@ import com.TaiNguyen.ProjectManagementSystems.Modal.Project;
 import com.TaiNguyen.ProjectManagementSystems.Modal.UserIssueSalary;
 import com.TaiNguyen.ProjectManagementSystems.repository.IssueRepository;
 import com.TaiNguyen.ProjectManagementSystems.repository.ProjectRepository;
-import org.apache.poi.ss.usermodel.RichTextString;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.util.IOUtils;
+import org.apache.poi.xssf.usermodel.*;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.List;
 
 @Service
@@ -26,7 +26,7 @@ public class IssueExportExcelService {
         this.issueRepository = issueRepository;
     }
 
-    public byte[] exportIssuesToExcel(long projectId) throws IOException {
+    public byte[] exportIssuesToExcel(long projectId, String watermarkUrl) throws IOException {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IOException("Project not found"));
         List<Issue> issues = issueRepository.findByProjectId(project.getId());
@@ -91,5 +91,6 @@ public class IssueExportExcelService {
             row.createCell(13).setCellValue(salary.isPaid() ? "True" : "False");
         }
     }
+
 
 }

@@ -74,4 +74,14 @@ public class FileInfoController {
         User user = userService.findUserProfileByJwt(jwt);
         return fileInfoService.addOrUpdateFile(fileName, user.getId());
     }
+
+    @GetMapping("/UserAssigner/{userId}")
+    public ResponseEntity<List<FileInfo>> getFilesByUserAssignerId(@RequestHeader("Authorization") String jwt, @PathVariable long userId) throws Exception {
+        User user = userService.findUserProfileByJwt(jwt);
+        List<FileInfo> fileInfos = fileInfoService.getFileByUserId(userId);
+        if(fileInfos.isEmpty()){
+            return ResponseEntity.status(404).body(null);
+        }
+        return ResponseEntity.ok(fileInfos);
+    }
 }

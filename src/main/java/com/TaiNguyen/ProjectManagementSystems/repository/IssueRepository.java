@@ -63,10 +63,10 @@ public interface IssueRepository extends JpaRepository<Issue, Long> {
 
     List<Object[]> countIssuesByStatusAndAssignee(Long projectId);
 
-    @Query("SELECT COUNT(i) FROM Issue i WHERE i.status = 'done' AND i.project.id = :projectId")
+    @Query("SELECT COUNT(i) FROM Issue i WHERE i.status = 'Hoàn thành' AND i.project.id = :projectId")
     long countCompletedIssuesByProject(@Param("projectId") Long projectId);
 
-    @Query("SELECT COUNT(i) FROM Issue i WHERE (i.status = 'pending' OR i.status = 'in_progress') AND i.project.id = :projectId")
+    @Query("SELECT COUNT(i) FROM Issue i WHERE (i.status = 'Chưa làm' OR i.status = 'Đang làm') AND i.project.id = :projectId")
     long countInProgressOrNotStartedIssuesByProject(@Param("projectId") Long projectId);
 
     // Truy vấn để lấy tất cả Issue của các Project mà user là owner

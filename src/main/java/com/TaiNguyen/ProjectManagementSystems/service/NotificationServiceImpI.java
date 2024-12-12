@@ -73,4 +73,10 @@ public class NotificationServiceImpI implements NotificationService{
         return new NotificationsAndIssuesDTO(notification, assignedIssues);
     }
 
+    @Override
+    public void markNotificationAsRead(long notificationId) {
+        notificationRepository.markAsRead(notificationId);
+    }
+
+
 }

@@ -20,4 +20,9 @@ public class TeamMemberResponse {
     private String avatar;
     private List<IssueDetailsResponse> issues; // Danh sách nhiệm vụ của thành viên
     private BigDecimal totalSalaryIssue;
+
+    private long totalAssignedIssues;
+    private long totalInProgressIssues;
+    private long totalPendingIssues;
+    private double averagePriority;
 }

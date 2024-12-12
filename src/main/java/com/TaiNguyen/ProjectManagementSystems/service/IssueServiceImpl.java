@@ -96,6 +96,7 @@ public class IssueServiceImpl implements IssueService{
         Issue issue = getIssueById(issueId);
 
         issue.setStatus(status);
+        issue.setActualDate(LocalDate.now());
         return issueRepository.save(issue);
 
     }
@@ -124,13 +125,13 @@ public class IssueServiceImpl implements IssueService{
         List<Issue> issues = issueRepository.findByProjectId(projectId);
 
         long inProgressCount = issues.stream()
-                .filter(issue -> "in progress".equalsIgnoreCase(issue.getStatus()))
+                .filter(issue -> "Chưa làm".equalsIgnoreCase(issue.getStatus()))
                 .count();
         long notStartedCount = issues.stream()
-                .filter(issue -> "not started".equalsIgnoreCase(issue.getStatus()))
+                .filter(issue -> "Đang làm".equalsIgnoreCase(issue.getStatus()))
                 .count();
         long doneCount = issues.stream()
-                .filter(issue -> "done".equalsIgnoreCase(issue.getStatus()))
+                .filter(issue -> "Hoàn thành".equalsIgnoreCase(issue.getStatus()))
                 .count();
 
         Map<String, Long> issueCountByStatus = new HashMap<>();

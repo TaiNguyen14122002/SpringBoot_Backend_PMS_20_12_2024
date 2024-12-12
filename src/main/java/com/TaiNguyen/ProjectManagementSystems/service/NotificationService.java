@@ -23,4 +23,6 @@ public interface NotificationService {
     public Notification deleteNotification(long project);
 
     public NotificationsAndIssuesDTO getNotificationsAndIssuesForUser(long userId);
+
+    public void markNotificationAsRead(long notificationId);
 }

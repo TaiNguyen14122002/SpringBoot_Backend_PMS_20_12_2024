@@ -497,9 +497,47 @@ public class ProjectServiceImpl implements ProjectService{
                                             .filter(s -> s.getUser().equals(user)) // Lọc `UserId`
                                             .map(s -> s.getSalary().toString())
                                             .findFirst()
-                                            .orElse("0") // Mặc định nếu không tìm thấy
+                                            .orElse("0"), // Mặc định nếu không tìm thấy
+                                    issue.getActualDate(), // Thêm thời gian thực tế (actualDate)
+                                    issue.getDueDate(), // Thêm thời gian dự kiến (dueDate)
+                                    issue.getFinish() // Thêm đánh giá chất lượng (finish)
                             ))
                             .collect(Collectors.toList());
+
+
+                    // Tính toán các thông tin bổ sung
+                    long totalAssignedIssues = user.getAssignedIssues().stream()
+                            .filter(issue -> issue.getProject().getId() == projectId)
+                            .count();
+
+                    long totalInProgressIssues = user.getAssignedIssues().stream()
+                            .filter(issue -> issue.getProject().getId() == projectId)
+                            .filter(issue -> issue.getStatus().equals("In Progress"))
+                            .count();
+
+                    long totalPendingIssues = user.getAssignedIssues().stream()
+                            .filter(issue -> issue.getProject().getId() == projectId)
+                            .filter(issue -> issue.getStatus().equals("Pending"))
+                            .count();
+
+                    double averagePriority = user.getAssignedIssues().stream()
+                            .filter(issue -> issue.getProject().getId() == projectId)
+                            .mapToInt(issue -> {
+                                String priority = issue.getPriority();
+                                // Chuyển đổi "priority" từ chuỗi sang số
+                                switch (priority.toLowerCase()) {
+                                    case "Low":
+                                        return 1;
+                                    case "Medium":
+                                        return 2;
+                                    case "High":
+                                        return 3;
+                                    default:
+                                        return 0; // Giá trị mặc định nếu không khớp
+                                }
+                            })
+                            .average()
+                            .orElse(0.0);
 
                     // Tính tổng thực hưởng `salary` cho các Issue của User trong dự án
                     BigDecimal totalSalaryIssue = user.getSalaries().stream()
@@ -518,8 +556,13 @@ public class ProjectServiceImpl implements ProjectService{
                             user.getCreatedDate(),
                             user.getAvatar(),
                             issues,
-                            totalSalaryIssue // Tổng lương của các nhiệm vụ thuộc dự án
+                            totalSalaryIssue, // Tổng lương của các nhiệm vụ thuộc dự án
+                            totalAssignedIssues, // Tổng số nhiệm vụ được giao
+                            totalInProgressIssues, // Tổng số nhiệm vụ đang làm
+                            totalPendingIssues, // Tổng số nhiệm vụ chưa làm
+                            averagePriority // Trung bình độ ưu tiên
                     );
+
                 }).collect(Collectors.toList());
         // Trả về thông tin chi tiết dự án
 

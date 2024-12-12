@@ -25,6 +25,7 @@ public class Issue {
     private String priority;
     private LocalDate startDate;
     private LocalDate dueDate;
+    private LocalDate actualDate;
     private String price;
     private String finish;
     private List<String> tags = new ArrayList<>();

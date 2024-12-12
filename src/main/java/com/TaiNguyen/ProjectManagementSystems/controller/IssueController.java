@@ -43,6 +43,9 @@ public class IssueController {
     @Autowired
     private UserIssueSalaryRepository userIssueSalaryRepository;
 
+    @Autowired
+    private NotificationService notificationService;
+
     @GetMapping("/{issueId}")
     public ResponseEntity<Issue> getIssueById(@PathVariable Long issueId) throws Exception {
         return ResponseEntity.ok(issueService.getIssueById(issueId));
@@ -89,6 +92,10 @@ public class IssueController {
         issueDTO.setAssignes(createdIssue.getAssignee());
         issueDTO.setPrice(createdIssue.getPrice());
         issueDTO.setFinish(createdIssue.getFinish());
+
+        String DateNow = LocalDate.now().toString();
+        String notificationContent = "Bạn đã thêm nhiệm vụ \"" + createdIssue.getTitle() +" trong dự án " + createdIssue.getProject().getName() +   " vào lúc " + DateNow;
+        notificationService.createNotification(notificationContent, createdIssue.getProject(), createdIssue);
 
         return ResponseEntity.ok(issueDTO);
     }
@@ -269,7 +276,8 @@ public class IssueController {
     @GetMapping("/api/export/issues/{projectId}")
     public ResponseEntity<byte[]> exportIssueToExcel(@PathVariable long projectId){
         try {
-            byte[] excelFile = issueExportExcelService.exportIssuesToExcel(projectId);
+            String watermarkUrl = "https://firebasestorage.googleapis.com/v0/b/pms-fe88f.appspot.com/o/files%2FBlack%20and%20White%20Auto%20Repair%20Logo%20(1).png?alt=media&token=8d2ec209-7487-4938-ad06-0df66efeb240";
+            byte[] excelFile = issueExportExcelService.exportIssuesToExcel(projectId, watermarkUrl);
             HttpHeaders headers = new HttpHeaders();
             headers.add("Content-Disposition", "attachment; filename=issues.xls");
             return ResponseEntity.ok().headers(headers).body(excelFile);
