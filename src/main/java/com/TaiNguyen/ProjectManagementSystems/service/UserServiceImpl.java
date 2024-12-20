@@ -159,6 +159,11 @@ public class UserServiceImpl implements UserService{
         return userRepository.findByEmail(email);
     }
 
+    @Override
+    public boolean isEmailExist(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
 
     @Override
     public User updateUsersProjectSize(User user, int number) {
@@ -168,6 +173,8 @@ public class UserServiceImpl implements UserService{
         }
         return null;
     }
+
+
 
 
 

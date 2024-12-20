@@ -14,6 +14,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,6 +46,9 @@ public class ProjectController {
 
     @Autowired
     private DatabaseService databaseService;
+
+    @Autowired
+    private FileInfoService fileInfoService;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -92,14 +96,54 @@ public class ProjectController {
     }
 
     @GetMapping("/{projectId}")
-    public ResponseEntity<Project>getProjectById(
+    public ResponseEntity<Map<String, Object>>getProjectById(
             @PathVariable Long projectId,
             @RequestHeader("Authorization") String jwt
     ) throws Exception {
         {
             User user = userService.findUserProfileByJwt(jwt);
             Project project= projectService.getProjectById(projectId);
-            return new ResponseEntity<>(project, HttpStatus.OK);
+
+
+            List<User> team = project.getTeam();
+            List<Map<String, Object>> teamWithFiles = team.stream().map(member -> {
+                List<FileInfo> fileInfos = fileInfoService.getFilesByUser(member);
+                Map<String, Object> memberWithFiles = new HashMap<>();
+                memberWithFiles.put("id", member.getId());
+                memberWithFiles.put("fullname", member.getFullname());
+                memberWithFiles.put("email", member.getEmail());
+                memberWithFiles.put("address", member.getAddress());
+                memberWithFiles.put("createdDate", member.getCreatedDate());
+                memberWithFiles.put("phone", member.getPhone());
+                memberWithFiles.put("company", member.getCompany());
+                memberWithFiles.put("programerposition", member.getProgramerposition());
+                memberWithFiles.put("selectedSkills", member.getSelectedSkills());
+                memberWithFiles.put("introduce", member.getIntroduce());
+                memberWithFiles.put("avatar", member.getAvatar());
+                memberWithFiles.put("projectSize", member.getProjectSize());
+                memberWithFiles.put("fileInfo", fileInfos); // Thêm fileInfo
+                return memberWithFiles;
+            }).toList();
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", project.getId());
+            response.put("name", project.getName());
+            response.put("description", project.getDescription());
+            response.put("category", project.getCategory());
+            response.put("tags", project.getTags());
+            response.put("fileNames", project.getFileNames());
+            response.put("goals", project.getGoals());
+            response.put("owner", project.getOwner());
+            response.put("team", teamWithFiles); // Đội với FileInfo
+            response.put("createdDate", project.getCreatedDate());
+            response.put("endDate", project.getEndDate());
+            response.put("action", project.getAction());
+            response.put("status", project.getStatus());
+            response.put("fundingAmount", project.getFundingAmount());
+            response.put("profitAmount", project.getProfitAmount());
+
+//            return new ResponseEntity<>(project, HttpStatus.OK);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         }
     }
 
@@ -129,7 +173,10 @@ public class ProjectController {
     ) throws Exception {
         {
             User user = userService.findUserProfileByJwt(jwt);
+            Project project= projectService.getProjectById(projectId);
+
             projectService.deleteProject(projectId, user.getId());
+
             notificationService.deleteNotification(projectId);
             MessageResponse res = new MessageResponse("Xoá thành công dự án");
             return new ResponseEntity<>(res, HttpStatus.OK);
@@ -679,6 +726,21 @@ public class ProjectController {
 //        return ResponseEntity.ok(springApiData);
 //    }
 
+    @DeleteMapping("/{projectId}/members/{userId}")
+    public ResponseEntity<Void> removeMember(@PathVariable long projectId, @PathVariable long userId, @RequestHeader("Authorization") String jwt) throws Exception {
+        User user = userService.findUserProfileByJwt(jwt);
+        projectService.removeUserFromProject(projectId, userId, user.getId());
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{projectId}/ownerFile")
+    public List<Map<String, String>> getOwnerFileNames(@PathVariable long projectId) {
+        Project project = projectRepository.findById(projectId).orElse(null);
+        if(project == null) {
+            throw new IllegalArgumentException("Project not found");
+        }
+        return fileInfoService.getFileNamesByProjectOwner(project);
+    }
 
 
 

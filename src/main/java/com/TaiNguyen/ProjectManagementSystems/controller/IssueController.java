@@ -1,6 +1,7 @@
 package com.TaiNguyen.ProjectManagementSystems.controller;
 
 import com.TaiNguyen.ProjectManagementSystems.Modal.*;
+import com.TaiNguyen.ProjectManagementSystems.Utill.EmailUtill;
 import com.TaiNguyen.ProjectManagementSystems.repository.IssueRepository;
 import com.TaiNguyen.ProjectManagementSystems.repository.UserIssueSalaryRepository;
 import com.TaiNguyen.ProjectManagementSystems.repository.UserRepository;
@@ -45,6 +46,8 @@ public class IssueController {
 
     @Autowired
     private NotificationService notificationService;
+    @Autowired
+    private EmailUtill emailUtill;
 
     @GetMapping("/{issueId}")
     public ResponseEntity<Issue> getIssueById(@PathVariable Long issueId) throws Exception {
@@ -119,6 +122,13 @@ public class IssueController {
         throws Exception{
         Issue issue = issueService.addUserToIssue(issueId, userId);
 
+        User assignee = issue.getAssignee();
+        if(assignee != null){
+            String subject = "Thông báo phân công nhiệm vụ: " + issue.getTitle();
+            String htmlContent = createHtmlEmailContent(assignee, issue);
+
+            emailUtill.sendEmail(assignee.getEmail(), subject, htmlContent);
+        }
         return ResponseEntity.ok(issue);
     }
     @PutMapping("/{issueId}/status/{status}")
@@ -133,6 +143,12 @@ public class IssueController {
     public ResponseEntity<Issue> updateFinishIssue(@PathVariable String finish, @PathVariable Long issueId) throws  Exception{
         Issue issue = issueService.updateFinishIssue(issueId, finish);
 
+        User assignee = issue.getAssignee();
+        if(assignee != null){
+            String subject = "Thông báo đánh giá mức độ hoàn thành nhiệm vụ: " + issue.getTitle();
+            String content = createHtmlEmailContentFinish(assignee, issue);
+            emailUtill.sendEmail(assignee.getEmail(), subject, content);
+        }
         return ResponseEntity.ok(issue);
     }
 
@@ -351,6 +367,98 @@ public class IssueController {
 
         // Trả về kết quả tổng hợp sau khi xử lý tất cả các issue
         return resultMessage.toString();
+    }
+
+    private String createHtmlEmailContent(User assignee, Issue issue) {
+        return "<!DOCTYPE html>"
+                + "<html lang='vi'>"
+                + "<head>"
+                + "<meta charset='UTF-8'>"
+                + "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
+                + "<style>"
+                + "body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }"
+                + ".container { max-width: 600px; margin: 0 auto; padding: 20px; }"
+                + ".header { background-color: #4CAF50; color: white; text-align: center; padding: 10px; }"
+                + ".content { background-color: #f9f9f9; border: 1px solid #ddd; padding: 20px; }"
+                + ".footer { text-align: center; margin-top: 20px; font-size: 0.8em; color: #777; }"
+                + "</style>"
+                + "</head>"
+                + "<body>"
+                + "<div class='container'>"
+                + "<div class='header'>"
+                + "<h1>Thông Báo Phân Công Nhiệm Vụ Mới</h1>"
+                + "</div>"
+                + "<div class='content'>"
+                + "<p>Chào " + assignee.getFullname() + ",</p>"
+                + "<p>Bạn đã được phân công một nhiệm vụ mới:</p>"
+                + "<h2>" + issue.getTitle() + "</h2>"
+                + "<p><strong>Mô tả nhiệm vụ:</strong> " + issue.getDescription() + "</p>"
+                + "<p><strong>Ngày bắt đầu:</strong> " + issue.getStartDate() + "</p>"
+                + "<p><strong>Ngày hoàn thành dự kiến:</strong> " + issue.getDueDate() + "</p>"
+                + "<p>Chúc bạn hoàn thành tốt nhiệm vụ!</p>"
+                + "</div>"
+                + "<div class='footer'>"
+                + "<p>Email này được gửi tự động. Vui lòng không trả lời.</p>"
+                + "</div>"
+                + "</div>"
+                + "</body>"
+                + "</html>";
+    }
+
+    private String createHtmlEmailContentFinish(User assignee, Issue issue) {
+        return "<!DOCTYPE html>"
+                + "<html lang='vi'>"
+                + "<head>"
+                + "<meta charset='UTF-8'>"
+                + "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
+                + "<style>"
+                + "body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }"
+                + ".container { max-width: 600px; margin: 0 auto; padding: 20px; }"
+                + ".header { background-color: #4CAF50; color: white; text-align: center; padding: 10px; }"
+                + ".content { background-color: #f9f9f9; border: 1px solid #ddd; padding: 20px; }"
+                + ".footer { text-align: center; margin-top: 20px; font-size: 0.8em; color: #777; }"
+                + ".evaluation { margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px; }"
+                + ".star-rating { font-size: 24px; }"
+                + ".star-rating input { display: none; }"
+                + ".star-rating label { color: #ddd; cursor: pointer; }"
+                + ".star-rating input:checked ~ label { color: #ffca08; }"
+                + ".comment-box { width: 100%; height: 100px; margin-top: 10px; padding: 5px; border: 1px solid #ddd; }"
+                + ".submit-btn { background-color: #4CAF50; color: white; border: none; padding: 10px 20px; cursor: pointer; margin-top: 10px; }"
+                + "</style>"
+                + "</head>"
+                + "<body>"
+                + "<div class='container'>"
+                + "<div class='header'>"
+                + "<h1>Đánh Giá Hoàn Thành Nhiệm Vụ</h1>"
+                + "</div>"
+                + "<div class='content'>"
+                + "<p>Chào " + assignee.getFullname() + ",</p>"
+                + "<p>Nhiệm vụ sau đây đã được hoàn thành:</p>"
+                + "<h2>" + issue.getTitle() + "</h2>"
+                + "<p><strong>Mô tả nhiệm vụ:</strong> " + issue.getDescription() + "</p>"
+                + "<p><strong>Ngày bắt đầu:</strong> " + issue.getStartDate() + "</p>"
+                + "<p><strong>Ngày hoàn thành:</strong> " + issue.getDueDate() + "</p>"
+                + "<div class='evaluation'>"
+                + "<h3>Đánh giá mức độ hoàn thành:</h3>"
+                + "<form action='#' method='post'>"
+                + "<div class='star-rating'>"
+                + "<input type='radio' id='star5' name='rating' value='5'><label for='star5'>★</label>"
+                + "<input type='radio' id='star4' name='rating' value='4'><label for='star4'>★</label>"
+                + "<input type='radio' id='star3' name='rating' value='3'><label for='star3'>★</label>"
+                + "<input type='radio' id='star2' name='rating' value='2'><label for='star2'>★</label>"
+                + "<input type='radio' id='star1' name='rating' value='1'><label for='star1'>★</label>"
+                + "</div>"
+                + "<textarea class='comment-box' name='comment' placeholder='Nhập nhận xét của bạn ở đây...'></textarea>"
+                + "<button type='submit' class='submit-btn'>Gửi đánh giá</button>"
+                + "</form>"
+                + "</div>"
+                + "</div>"
+                + "<div class='footer'>"
+                + "<p>Email này được gửi tự động. Vui lòng không trả lời trực tiếp.</p>"
+                + "</div>"
+                + "</div>"
+                + "</body>"
+                + "</html>";
     }
 
 

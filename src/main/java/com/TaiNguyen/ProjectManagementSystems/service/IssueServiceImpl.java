@@ -1,12 +1,15 @@
 package com.TaiNguyen.ProjectManagementSystems.service;
 
 import com.TaiNguyen.ProjectManagementSystems.Modal.*;
+import com.TaiNguyen.ProjectManagementSystems.Utill.EmailUtill;
 import com.TaiNguyen.ProjectManagementSystems.repository.IssueRepository;
 import com.TaiNguyen.ProjectManagementSystems.repository.ProjectRepository;
 import com.TaiNguyen.ProjectManagementSystems.repository.UserIssueSalaryRepository;
 import com.TaiNguyen.ProjectManagementSystems.repository.UserRepository;
 import com.TaiNguyen.ProjectManagementSystems.request.IssueRequest;
+import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestHeader;
 
@@ -34,6 +37,8 @@ public class IssueServiceImpl implements IssueService{
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private EmailUtill emailUtill;
 
 
     @Override
@@ -368,6 +373,47 @@ public class IssueServiceImpl implements IssueService{
     public Optional<Issue> findByIdAndProject(long issueId, Project project) {
         return issueRepository.findByIdAndProject(issueId, project);
     }
+
+    @Override
+    @Scheduled(cron = "0 0 9 * * ?")  // 9h sáng
+    @Scheduled(cron = "0 0 14 * * ?") // 2h chiều
+    @Scheduled(cron = "0 0 17 * * ?") // 5h chiều
+    @Scheduled(cron = "0 0 19 * * ?") // 7h tối
+    public void checkAndNotifyIssuesDueSoon() throws MessagingException {
+        List<Issue> issuesDueSoon = getIssuesDueSoon();
+        for(Issue issue : issuesDueSoon) {
+            sendNotification(issue);
+        }
+    }
+
+    @Override
+    public List<Issue> getIssuesDueSoon() {
+        LocalDate today = LocalDate.now();
+        LocalDate threshold = today.plusDays(2);
+        return issueRepository.findByDueDateBefore(threshold);
+    }
+
+    private void sendNotification(Issue issue) throws MessagingException {
+        User assignee = issue.getAssignee();
+        if(assignee != null){
+            String subject = "Reminder: Task " + issue.getTitle() + "is about to be due!";
+            String body = "Dear" + assignee.getFullname() + ",\n\nThe task '" + issue.getTitle() +
+                    "' is about to be due on " + issue.getDueDate() + ". Please make sure to complete it on time.";
+            emailUtill.sendEmail(assignee.getEmail(), subject, body);
+        }
+
+        Project project = issue.getProject();
+        if(project != null){
+            User projectOwner = project.getOwner();
+            if(projectOwner != null){
+                String subject = "Reminder: Task " + issue.getTitle() + " is about to be due!";
+                String body = "Dear " + projectOwner.getFullname() + ",\n\nThe task '" + issue.getTitle() +
+                        "' assigned to " + issue.getAssignee().getFullname() + " is about to be due on " + issue.getDueDate() + ".";
+                emailUtill.sendEmail(projectOwner.getEmail(), subject, body);
+            }
+        }
+    }
+
 
 
 }

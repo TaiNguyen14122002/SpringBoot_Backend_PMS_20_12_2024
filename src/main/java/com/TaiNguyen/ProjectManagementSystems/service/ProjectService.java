@@ -1,6 +1,7 @@
 package com.TaiNguyen.ProjectManagementSystems.service;
 
 import com.TaiNguyen.ProjectManagementSystems.Modal.*;
+import jakarta.mail.MessagingException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
@@ -77,5 +78,8 @@ public interface ProjectService {
     public Project updateProject(long id, Project project);
 
     public Optional<Project> findById(Long projectId);
+
+    public void removeUserFromProject(long projectId, long userId, long currentUserId) throws MessagingException;
+
 
 }

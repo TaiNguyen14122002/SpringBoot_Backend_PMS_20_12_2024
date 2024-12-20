@@ -5,6 +5,7 @@ import com.TaiNguyen.ProjectManagementSystems.Modal.IssueDTO;
 import com.TaiNguyen.ProjectManagementSystems.Modal.Project;
 import com.TaiNguyen.ProjectManagementSystems.Modal.User;
 import com.TaiNguyen.ProjectManagementSystems.request.IssueRequest;
+import jakarta.mail.MessagingException;
 import jdk.jshell.spi.ExecutionControl;
 
 import java.time.LocalDate;
@@ -66,6 +67,10 @@ public interface IssueService {
     public Issue updateDueDate(Long issueId, LocalDate dueDate);
 
     public Optional<Issue> findByIdAndProject(long issueId, Project project);
+
+    void checkAndNotifyIssuesDueSoon() throws MessagingException;
+
+    List<Issue> getIssuesDueSoon();
 
 
 }

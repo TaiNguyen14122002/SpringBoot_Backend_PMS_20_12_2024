@@ -37,7 +37,7 @@ public class User {
     private String password;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "assignee", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "assignee", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Issue>assignedIssues = new ArrayList<>();
 
     private int projectSize;

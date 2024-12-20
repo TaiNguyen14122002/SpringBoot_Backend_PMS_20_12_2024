@@ -1,5 +1,6 @@
 package com.TaiNguyen.ProjectManagementSystems.controller;
 
+import com.TaiNguyen.ProjectManagementSystems.service.IssueReminderService;
 import com.TaiNguyen.ProjectManagementSystems.service.ProjectReminderService;
 import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +15,18 @@ public class TestController {
     @Autowired
     private ProjectReminderService projectReminderService;
 
+    @Autowired
+    private IssueReminderService issueReminderService;
+
     @GetMapping("/sendReminder")
     public String sendReminderTest() throws MessagingException {
         projectReminderService.checkAndSendReminder();
+        return "OK";
+    }
+
+    @GetMapping("/sendIssueReminder")
+    public String sendIssueReminder() throws MessagingException {
+        issueReminderService.checkAndSendReminder();
         return "OK";
     }
 }

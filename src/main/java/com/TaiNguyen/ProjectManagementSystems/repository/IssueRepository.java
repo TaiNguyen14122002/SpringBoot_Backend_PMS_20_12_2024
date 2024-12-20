@@ -89,4 +89,6 @@ public interface IssueRepository extends JpaRepository<Issue, Long> {
     List<Issue> findByAssigneeId(long assigneeId);
 
     Optional<Issue> findByIdAndProject(long issueId, Project project);
+
+    List<Issue> findByDueDateBefore(LocalDate date);
 }

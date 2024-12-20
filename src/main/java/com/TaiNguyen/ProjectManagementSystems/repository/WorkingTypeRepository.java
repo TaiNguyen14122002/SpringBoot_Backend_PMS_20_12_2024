@@ -13,4 +13,6 @@ public interface WorkingTypeRepository extends JpaRepository<WorkingType, Long> 
 
     WorkingType findByUserIdAndProjectId(Long userId, Long projectId);
 
+    void deleteByUserIdAndProjectId(long userId, long projectId);
+
 }

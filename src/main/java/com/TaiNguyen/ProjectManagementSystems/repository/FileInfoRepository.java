@@ -1,6 +1,7 @@
 package com.TaiNguyen.ProjectManagementSystems.repository;
 
 import com.TaiNguyen.ProjectManagementSystems.Modal.FileInfo;
+import com.TaiNguyen.ProjectManagementSystems.Modal.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -14,4 +15,6 @@ public interface FileInfoRepository extends JpaRepository<FileInfo, Long> {
     List<FileInfo> findByUserId(Long userId);
 
     Optional<FileInfo> findByUser_Id(Long userId);
+
+    List<FileInfo> findByUser(User user);
 }

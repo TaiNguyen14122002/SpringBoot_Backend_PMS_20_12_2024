@@ -1,7 +1,9 @@
 package com.TaiNguyen.ProjectManagementSystems.service;
 
 import com.TaiNguyen.ProjectManagementSystems.Modal.*;
+import com.TaiNguyen.ProjectManagementSystems.Utill.EmailUtill;
 import com.TaiNguyen.ProjectManagementSystems.repository.*;
+import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -42,6 +44,11 @@ public class ProjectServiceImpl implements ProjectService{
     private DatabaseService databaseService;
     @Autowired
     private IssueRepository issueRepository;
+    @Autowired
+    private EmailUtill emailUtill;
+
+    @Autowired
+    private WorkingTypeRepository workingTypeRepository;
 
     private void createDefaultTaskCategories(Project project){
         List<String> defaultLabel = List.of("Chưa làm", "Đang làm", "Hoàn thành");
@@ -173,6 +180,7 @@ public class ProjectServiceImpl implements ProjectService{
         if(!project.getTeam().contains(user)){
             project.getChat().getUsers().remove(user);
             project.getTeam().remove(user);
+
 
         }
         projectRepository.save(project);
@@ -624,6 +632,80 @@ public class ProjectServiceImpl implements ProjectService{
     public Optional<Project> findById(Long projectId) {
         return projectRepository.findById(projectId);
     }
+
+    @Override
+    @Transactional
+    public void removeUserFromProject(long projectId, long userId, long currentUserId) throws MessagingException {
+        // Tìm dự án
+        Project project = projectRepository.findById(projectId).orElseThrow(() -> new RuntimeException("Project not found"));
+
+        // Kiểm tra quyền chủ dự án
+        if (project.getOwner() == null || project.getOwner().getId() != currentUserId) {
+            throw new RuntimeException("Chỉ chủ dự án mới có thể xoá thành viên");
+        }
+
+        // Tìm người dùng
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Xóa người dùng khỏi working type repository
+        workingTypeRepository.deleteByUserIdAndProjectId(userId, projectId);
+
+        // Sử dụng Iterator để xóa người dùng khỏi team
+        Iterator<User> iterator = project.getTeam().iterator();
+        while (iterator.hasNext()) {
+            User teamMember = iterator.next();
+            if (teamMember.getId() == userId) {
+                iterator.remove();  // Xóa người dùng khỏi team
+                break;  // Dừng khi đã tìm thấy người dùng cần xóa
+            }
+        }
+
+        // Xử lý assignee trong các issues
+        for (Issue issue : project.getIssues()) {
+            if (issue.getAssignee() != null && issue.getAssignee().getId() == userId) {
+                issue.setAssignee(null);  // Gỡ assignee khỏi issue
+                issueRepository.save(issue);  // Lưu issue đã cập nhật
+                System.out.println("Done");
+            }
+        }
+
+        // Lưu lại dự án sau khi thay đổi
+        projectRepository.save(project);
+
+        // Gửi email thông báo
+        String subject = "Thông báo: Bạn đã bị xoá khỏi dự án";
+        String htmlContent =
+                "<!DOCTYPE html>" +
+                        "<html lang=\"vi\">" +
+                        "<head>" +
+                        "<meta charset=\"UTF-8\">" +
+                        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" +
+                        "<title>Thông báo quan trọng</title>" +
+                        "</head>" +
+                        "<body style=\"margin: 0; padding: 0; font-family: Arial, sans-serif;\">" +
+                        "<div style=\"max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f4f4f4;\">" +
+                        "  <div style=\"background-color: #ffffff; padding: 30px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);\">" +
+                        "    <div style=\"text-align: center; margin-bottom: 20px; border-bottom: 2px solid #3498db; padding-bottom: 20px;\">" +
+                        "      <h1 style=\"color: #3498db; font-size: 24px; margin: 0;\">Thông báo quan trọng</h1>" +
+                        "    </div>" +
+                        "    <p style=\"font-size: 16px; line-height: 1.5; color: #333;\">Kính gửi " + user.getFullname() + ",</p>" +
+                        "    <p style=\"font-size: 16px; line-height: 1.5; color: #333;\">Chúng tôi xin thông báo rằng bạn đã được xóa khỏi dự án:</p>" +
+                        "    <p style=\"font-size: 18px; font-weight: bold; color: #e74c3c; text-align: center; margin: 20px 0; padding: 10px; background-color: #fadbd8; border-radius: 3px;\">" +
+                        project.getName() + "</p>" +
+                        "    <p style=\"font-size: 16px; line-height: 1.5; color: #333;\">Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chủ dự án để biết thêm thông tin.</p>" +
+                        "    <p style=\"font-size: 16px; line-height: 1.5; color: #333; margin-top: 30px;\">Trân trọng,<br />Đội ngũ Quản lý Dự án</p>" +
+                        "  </div>" +
+                        "  <div style=\"text-align: center; margin-top: 20px; font-size: 14px; color: #888;\">" +
+                        "    © 2023 Project Management Team. All rights reserved." +
+                        "  </div>" +
+                        "</div>" +
+                        "</body>" +
+                        "</html>";
+
+        // Gửi email
+        emailUtill.sendEmail(user.getEmail(), subject, htmlContent);
+    }
+
 
 
 }

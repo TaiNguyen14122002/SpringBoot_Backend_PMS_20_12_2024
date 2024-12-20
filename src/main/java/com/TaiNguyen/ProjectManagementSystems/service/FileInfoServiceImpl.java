@@ -17,7 +17,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class FileInfoServiceImpl implements FileInfoService{
@@ -89,6 +91,22 @@ public class FileInfoServiceImpl implements FileInfoService{
         fileInfo.setUploadDate(LocalDate.now());
 
         return fileInfoRepository.save(fileInfo);
+    }
+
+    @Override
+    public List<Map<String,String>> getFileNamesByProjectOwner(Project project) {
+        if(project.getName() == null){
+            return List.of();
+        }
+        return fileInfoRepository.findByUser(project.getOwner())
+                .stream()
+                .map(fileInfo -> Map.of("Filename", fileInfo.getFileName()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<FileInfo> getFilesByUser(User user) {
+        return fileInfoRepository.findByUser(user);
     }
 
 
