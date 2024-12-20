@@ -45,7 +45,8 @@ public class AppConfig {
                  cfg.setAllowedOrigins(Arrays.asList(
 
                          "http://localhost:5173",
-                         "https://react-js-project-management-systems.vercel.app"
+                         "https://react-js-project-management-systems.vercel.app",
+                         "https://react-js-frontend-pms-20-12-2024.vercel.app/"
 
                  ));
 //                cfg.setAllowedOrigins(Collections.singletonList("*"));
