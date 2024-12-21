@@ -146,7 +146,7 @@ public class IssueController {
         User assignee = issue.getAssignee();
         if(assignee != null){
             String subject = "Thông báo đánh giá mức độ hoàn thành nhiệm vụ: " + issue.getTitle();
-            String content = createHtmlEmailContentFinish(assignee, issue);
+            String content = createHtmlEmailContentFinish(assignee, issue, finish);
             emailUtill.sendEmail(assignee.getEmail(), subject, content);
         }
         return ResponseEntity.ok(issue);
@@ -405,7 +405,9 @@ public class IssueController {
                 + "</html>";
     }
 
-    private String createHtmlEmailContentFinish(User assignee, Issue issue) {
+    private String createHtmlEmailContentFinish(User assignee, Issue issue, String finish) {
+        int starRating = getStarRating(finish);
+
         return "<!DOCTYPE html>"
                 + "<html lang='vi'>"
                 + "<head>"
@@ -419,11 +421,8 @@ public class IssueController {
                 + ".footer { text-align: center; margin-top: 20px; font-size: 0.8em; color: #777; }"
                 + ".evaluation { margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px; }"
                 + ".star-rating { font-size: 24px; }"
-                + ".star-rating input { display: none; }"
-                + ".star-rating label { color: #ddd; cursor: pointer; }"
-                + ".star-rating input:checked ~ label { color: #ffca08; }"
-                + ".comment-box { width: 100%; height: 100px; margin-top: 10px; padding: 5px; border: 1px solid #ddd; }"
-                + ".submit-btn { background-color: #4CAF50; color: white; border: none; padding: 10px 20px; cursor: pointer; margin-top: 10px; }"
+                + ".star { color: #ddd; }"
+                + ".star.filled { color: #ffca08; }"
                 + "</style>"
                 + "</head>"
                 + "<body>"
@@ -440,17 +439,10 @@ public class IssueController {
                 + "<p><strong>Ngày hoàn thành:</strong> " + issue.getDueDate() + "</p>"
                 + "<div class='evaluation'>"
                 + "<h3>Đánh giá mức độ hoàn thành:</h3>"
-                + "<form action='#' method='post'>"
                 + "<div class='star-rating'>"
-                + "<input type='radio' id='star5' name='rating' value='5'><label for='star5'>★</label>"
-                + "<input type='radio' id='star4' name='rating' value='4'><label for='star4'>★</label>"
-                + "<input type='radio' id='star3' name='rating' value='3'><label for='star3'>★</label>"
-                + "<input type='radio' id='star2' name='rating' value='2'><label for='star2'>★</label>"
-                + "<input type='radio' id='star1' name='rating' value='1'><label for='star1'>★</label>"
+                + getStarRatingHtml(starRating)
                 + "</div>"
-                + "<textarea class='comment-box' name='comment' placeholder='Nhập nhận xét của bạn ở đây...'></textarea>"
-                + "<button type='submit' class='submit-btn'>Gửi đánh giá</button>"
-                + "</form>"
+                + "<p>Mức độ hoàn thành: " + finish + "%</p>"
                 + "</div>"
                 + "</div>"
                 + "<div class='footer'>"
@@ -460,6 +452,29 @@ public class IssueController {
                 + "</body>"
                 + "</html>";
     }
+
+
+    private int getStarRating(String finish) {
+        int finishValue = Integer.parseInt(finish);
+        if (finishValue <= 20) return 1;
+        if (finishValue <= 40) return 2;
+        if (finishValue <= 60) return 3;
+        if (finishValue <= 80) return 4;
+        return 5;
+    }
+
+    private String getStarRatingHtml(int starRating) {
+        StringBuilder stars = new StringBuilder();
+        for (int i = 1; i <= 5; i++) {
+            if (i <= starRating) {
+                stars.append("<span class='star filled'>★</span>");
+            } else {
+                stars.append("<span class='star'>★</span>");
+            }
+        }
+        return stars.toString();
+    }
+
 
 
 
