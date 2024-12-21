@@ -568,7 +568,7 @@ public class ProjectController {
     @GetMapping("/{projectId}/detailsMembers/machinelearning")
     public ResponseEntity<byte[]> getProjectDetailsMembersMachineLearning(@PathVariable Long projectId) {
 
-        String springApiUrl = "https://springboot-backend-pms-20-12-2024.onrender.com" + projectId + "/detailsMembers/machinelearning";
+//        String springApiUrl = "https://springboot-backend-pms-20-12-2024.onrender.com" + projectId + "/detailsMembers/machinelearning";
 
         // Lấy thông tin dự án
         Project project = projectRepository.findById(projectId)
