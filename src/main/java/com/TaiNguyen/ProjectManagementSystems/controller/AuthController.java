@@ -12,6 +12,7 @@ import com.TaiNguyen.ProjectManagementSystems.response.SuccessResponse;
 import com.TaiNguyen.ProjectManagementSystems.service.CustomeUserDetailsImpl;
 import com.TaiNguyen.ProjectManagementSystems.service.SubscriptionService;
 import com.TaiNguyen.ProjectManagementSystems.service.UserService;
+import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -72,7 +73,7 @@ public class AuthController {
 
 
     @PostMapping("/signup")
-    public ResponseEntity<?> createUser(@RequestBody User user) {
+    public ResponseEntity<?> createUser(@RequestBody User user) throws MessagingException {
         if(!correctPassword.isValidEmail(user.getEmail())) {
             ErrorResponse errorResponse = new ErrorResponse("Email không hợp lệ. Vui lòng nhập đúng định dạng email.");
             return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
@@ -103,7 +104,46 @@ public class AuthController {
         User savedUser = userRepository.save(CreatedUser);
 
         SuccessResponse res = new SuccessResponse();
+
+        String loginLink = "https://react-js-frontend-pms-20-12-2024.vercel.app/";
+
         res.setMessage("Đăng ký tài khoản thành công");
+        String subject = "Đăng ký tài khoản thành công";
+        String emailContent = "<!DOCTYPE html>"
+                + "<html lang=\"vi\">"
+                + "<head>"
+                + "<meta charset=\"UTF-8\">"
+                + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
+                + "<title>Đăng ký tài khoản thành công</title>"
+                + "</head>"
+                + "<body style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4;\">"
+                + "<div style=\"max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1);\">"
+                + "<div style=\"background-color: #60A5FA; color: white; text-align: center; padding: 20px; border-radius: 8px 8px 0 0;\">"
+                + "<img src=\"https://firebasestorage.googleapis.com/v0/b/pms-fe88f.appspot.com/o/files%2FBlack%20and%20White%20Auto%20Repair%20Logo%20(1).png?alt=media&token=93954b37-4a53-43c2-a04e-7f49737cd55a\" alt=\"Logo công ty\" style=\"max-width: 150px; height: auto;\">"
+                + "<h1 style=\"margin: 10px 0;\">Đăng ký tài khoản thành công</h1>"
+                + "</div>"
+                + "<div style=\"padding: 20px; text-align: center;\">"
+                + "<p style=\"font-size: 16px; margin-bottom: 20px;\">Chào mừng bạn đến với Project Management Systems!</p>"
+                + "<p style=\"font-size: 16px; margin-bottom: 20px;\">Tài khoản của bạn đã được đăng ký thành công. Dưới đây là thông tin tài khoản của bạn:</p>"
+                + "<p style=\"font-size: 16px; margin-bottom: 20px;\">Email: <strong>" + user.getEmail() + "</strong></p>"
+                + "<p style=\"font-size: 16px; margin-bottom: 20px;\">Mật khẩu: <strong>" + user.getPassword() + "</strong></p>"
+                + "<p style=\"font-size: 16px; margin-top: 20px;\">Vui lòng thay đổi mật khẩu sau khi đăng nhập lần đầu.</p>"
+                + "</div>"
+                + "<div style=\"padding: 20px; text-align: center;\">"
+                + "<a href=\"" + loginLink + "\" style=\"display: inline-block; background-color: #60A5FA; color: white; padding: 12px 24px; text-align: center; text-decoration: none; font-size: 18px; border-radius: 4px; transition: background-color 0.3s;\">Đến trang đăng nhập</a>"
+                + "<p style=\"font-size: 14px; color: #666; margin-top: 20px;\">Nếu nút không hoạt động, hãy sao chép và dán liên kết sau vào trình duyệt của bạn:</p>"
+                + "<p style=\"font-size: 14px; color: #60A5FA;\">" + loginLink + "</p>"
+                + "</div>"
+                + "<div style=\"background-color: #f8f8f8; text-align: center; padding: 10px; font-size: 12px; color: #666; border-radius: 0 0 8px 8px;\">"
+                + "<p>© 2023 Project Management Systems. Mọi quyền được bảo lưu.</p>"
+                + "<p>Nếu bạn cần hỗ trợ, vui lòng liên hệ <a href=\"mailto:2024801030129@student.tdmu.edu.vn\" style=\"color: #60A5FA;\">2024801030129@student.tdmu.edu.vn</a></p>"
+                + "</div>"
+                + "</div>"
+                + "</body>"
+                + "</html>";
+
+// Gửi email thông báo
+        emailUtill.sendEmail(user.getEmail(), subject, emailContent);
         return new ResponseEntity<>(res, HttpStatus.CREATED);
     }
 
@@ -167,7 +207,7 @@ public class AuthController {
                 userService.saveResetPasswordToken(email, token);
 
                 // Tạo liên kết reset mật khẩu
-                String resetLink = "http://localhost:5173/";
+                String resetLink = "https://react-js-frontend-pms-20-12-2024.vercel.app/";
 
                 // Nội dung email
                 String subject = "Yêu cầu đặt lại mật khẩu";
