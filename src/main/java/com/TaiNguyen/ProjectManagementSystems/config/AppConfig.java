@@ -46,7 +46,7 @@ public class AppConfig {
 
                          "http://localhost:5173",
                          "https://react-js-project-management-systems.vercel.app",
-                         "https://react-js-frontend-pms-20-12-2024.vercel.app",
+                         "https://react-js-frontend-pms-20-12-2024.vercel.app/",
                          "https://firebasestorage.googleapis.com/v0/b/pms-fe88f.appspot.com/o/files%2FBlack%20and%20White%20Auto%20Repair%20Logo%20(1).png?alt=media&token=5cbbc329-d36f-46e1-8526-53d6e2f11699",
                          "https://2ca174cfbbddfaeca00ed30b5b480967.serveo.net"
 

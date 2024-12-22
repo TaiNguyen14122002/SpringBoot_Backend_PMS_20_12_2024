@@ -1,9 +1,6 @@
 package com.TaiNguyen.ProjectManagementSystems.service;
 
-import com.TaiNguyen.ProjectManagementSystems.Modal.Chat;
-import com.TaiNguyen.ProjectManagementSystems.Modal.Message;
-import com.TaiNguyen.ProjectManagementSystems.Modal.Project;
-import com.TaiNguyen.ProjectManagementSystems.Modal.User;
+import com.TaiNguyen.ProjectManagementSystems.Modal.*;
 import com.TaiNguyen.ProjectManagementSystems.Utill.EmailUtill;
 import com.TaiNguyen.ProjectManagementSystems.repository.MessageRepository;
 import com.TaiNguyen.ProjectManagementSystems.repository.UserRepository;
@@ -13,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class MessageServiceImpl implements MessageService{
@@ -60,6 +58,15 @@ public class MessageServiceImpl implements MessageService{
         List<Message> findByChatIdOrderByCreateAtAsc = messageRepository.findByChatIdOrderByCreatedAtDesc(chat.getId());
         return findByChatIdOrderByCreateAtAsc;
     }
+//    @Override
+//    public List<Message> getMessagesByProjectId(Long projectId) throws Exception {
+//        Chat chat = projectService.getChatByProjectId(projectId);
+//        List<Message> findByChatIdOrderByCreateAtAsc = messageRepository.findByChatIdOrderByCreatedAtDesc(chat.getId());
+//        List<MessageDTO> messageDTOs = findByChatIdOrderByCreateAtAsc.stream()
+//                .map(message -> new MessageDTO(message))
+//                .collect(Collectors.toList());
+//        return findByChatIdOrderByCreateAtAsc;
+//    }
 
     @Override
     public void sendEmailToTeam(Project project, User sender) throws MessagingException {
