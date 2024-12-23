@@ -1,9 +1,6 @@
 package com.TaiNguyen.ProjectManagementSystems.service;
 
-import com.TaiNguyen.ProjectManagementSystems.Modal.Issue;
-import com.TaiNguyen.ProjectManagementSystems.Modal.IssueDTO;
-import com.TaiNguyen.ProjectManagementSystems.Modal.Project;
-import com.TaiNguyen.ProjectManagementSystems.Modal.User;
+import com.TaiNguyen.ProjectManagementSystems.Modal.*;
 import com.TaiNguyen.ProjectManagementSystems.request.IssueRequest;
 import jakarta.mail.MessagingException;
 import jdk.jshell.spi.ExecutionControl;
@@ -62,7 +59,10 @@ public interface IssueService {
 
     public List<Issue> getExpiringIssues(User assignee) throws Exception;
 
-    public List<Issue> getExpiredIssues(User assignee) throws Exception;
+//    public List<Issue> getExpiredIssues(User assignee) throws Exception;
+
+    public List<IssueResponseDTO> getExpiredIssues(User assignee) throws Exception;
+
 
     public Issue updateDueDate(Long issueId, LocalDate dueDate);
 

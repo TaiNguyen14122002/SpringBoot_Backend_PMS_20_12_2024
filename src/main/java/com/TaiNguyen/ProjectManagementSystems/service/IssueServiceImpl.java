@@ -357,10 +357,56 @@ public class IssueServiceImpl implements IssueService{
                 assignee, currentDate, endDate, "Hoàn thành");
     }
 
+//    @Override
+//    public List<Issue> getExpiredIssues(User assignee) throws Exception {
+//        LocalDate currentDate = LocalDate.now();
+//        return issueRepository.findByAssigneeAndDueDateBeforeAndStatusNot(assignee, currentDate, "Hoàn thành");
+//    }
+
     @Override
-    public List<Issue> getExpiredIssues(User assignee) throws Exception {
+    public List<IssueResponseDTO> getExpiredIssues(User assignee) throws Exception {
         LocalDate currentDate = LocalDate.now();
-        return issueRepository.findByAssigneeAndDueDateBeforeAndStatusNot(assignee, currentDate, "Hoàn thành");
+        List<Issue> issues = issueRepository.findByAssigneeAndDueDateBeforeAndStatusNot(assignee, currentDate, "Hoàn thành");
+        return issues.stream()
+                .map(issue -> {
+                    boolean isOwner = issue.getAssignee().equals(assignee);
+
+                    // Tạo đối tượng AssigneeResponse
+                    AssigneeResponse assigneeResponse = new AssigneeResponse(
+                            issue.getAssignee().getId(),
+                            issue.getAssignee().getFullname(),
+                            issue.getAssignee().getEmail(),
+                            issue.getAssignee().getAddress(),
+                            issue.getAssignee().getCreatedDate(),
+                            issue.getAssignee().getPhone(),
+                            issue.getAssignee().getCompany(),
+                            issue.getAssignee().getProgramerposition(),
+                            issue.getAssignee().getSelectedSkills(),
+                            issue.getAssignee().getIntroduce(),
+                            issue.getAssignee().getAvatar(),
+                            issue.getAssignee().getProjectSize()
+                    );
+                    /// Tạo đối tượng IssueResponse
+                    return new IssueResponseDTO(
+                            issue.getId(),
+                            issue.getTitle(),
+                            issue.getDescription(),
+                            issue.getStatus(),
+                            issue.getProjectID(),
+                            issue.getPriority(),
+                            issue.getStartDate(),
+                            issue.getDueDate(),
+                            issue.getActualDate(),
+                            issue.getPrice(),
+                            issue.getFinish(),
+                            issue.getTags(),
+                            assigneeResponse,
+                            isOwner,
+                            issue.getSalary(),
+                            issue.getFileNames()
+                    );
+                }).collect(Collectors.toList());
+//        return issueRepository.findByAssigneeAndDueDateBeforeAndStatusNot(assignee, currentDate, "Hoàn thành");
     }
 
     @Override
