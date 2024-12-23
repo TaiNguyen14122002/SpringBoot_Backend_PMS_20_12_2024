@@ -86,6 +86,10 @@ public interface IssueRepository extends JpaRepository<Issue, Long> {
 
     List<Issue> findByAssigneeAndDueDateBeforeAndStatusNot(User assignee, LocalDate endDate, String status);
 
+    // Truy vấn nhiệm vụ mà người dùng là chủ hoặc được phân công và chưa hoàn thành
+    List<Issue> findByAssigneeOrProjectOwnerAndDueDateBeforeAndStatusNot(
+            User assignee, User owner, LocalDate endDate, String status);
+
     List<Issue> findByAssigneeId(long assigneeId);
 
     Optional<Issue> findByIdAndProject(long issueId, Project project);

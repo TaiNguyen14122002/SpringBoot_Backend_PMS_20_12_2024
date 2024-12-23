@@ -8,6 +8,7 @@ import com.TaiNguyen.ProjectManagementSystems.repository.UserRepository;
 import com.TaiNguyen.ProjectManagementSystems.request.IssueRequest;
 import com.TaiNguyen.ProjectManagementSystems.response.MessageResponse;
 import com.TaiNguyen.ProjectManagementSystems.service.*;
+import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -290,8 +291,9 @@ public class IssueController {
     }
 
     @PutMapping({"/{issueId}/due-date"})
-    public ResponseEntity<Issue> updateDueDate(@PathVariable Long issueId, @RequestBody LocalDate dueDate){
-        Issue updatedIssue = issueService.updateDueDate(issueId, dueDate);
+    public ResponseEntity<Issue> updateDueDate(@RequestHeader("Authorization") String jwt, @PathVariable Long issueId, @RequestBody LocalDate dueDate) throws Exception {
+        User user = userService.findUserProfileByJwt(jwt);
+        Issue updatedIssue = issueService.updateDueDate(user, issueId, dueDate);
         return ResponseEntity.ok(updatedIssue);
     }
 

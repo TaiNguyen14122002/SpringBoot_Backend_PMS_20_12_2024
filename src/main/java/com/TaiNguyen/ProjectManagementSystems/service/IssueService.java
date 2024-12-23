@@ -64,7 +64,7 @@ public interface IssueService {
     public List<IssueResponseDTO> getExpiredIssues(User assignee) throws Exception;
 
 
-    public Issue updateDueDate(Long issueId, LocalDate dueDate);
+    public Issue updateDueDate(User OwnerId, Long issueId, LocalDate dueDate) throws MessagingException;
 
     public Optional<Issue> findByIdAndProject(long issueId, Project project);
 

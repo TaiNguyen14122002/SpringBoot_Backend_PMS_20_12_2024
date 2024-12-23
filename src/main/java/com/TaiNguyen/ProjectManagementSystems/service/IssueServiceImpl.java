@@ -10,9 +10,11 @@ import com.TaiNguyen.ProjectManagementSystems.request.IssueRequest;
 import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestHeader;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -366,27 +368,56 @@ public class IssueServiceImpl implements IssueService{
     @Override
     public List<IssueResponseDTO> getExpiredIssues(User assignee) throws Exception {
         LocalDate currentDate = LocalDate.now();
-        List<Issue> issues = issueRepository.findByAssigneeAndDueDateBeforeAndStatusNot(assignee, currentDate, "Hoàn thành");
+
+        // Truy vấn nhiệm vụ người dùng làm chủ (owner) và người được phân công (assignee)
+        List<Issue> issues = issueRepository.findByAssigneeOrProjectOwnerAndDueDateBeforeAndStatusNot(
+                assignee, assignee, currentDate, "Hoàn thành");
+
+        // Lọc các nhiệm vụ có trạng thái khác "Hoàn thành" nếu vẫn hiển thị
+        issues = issues.stream()
+                .filter(issue -> !"Hoàn thành".equals(issue.getStatus()))
+                .collect(Collectors.toList());
+
+        // Xử lý danh sách nhiệm vụ để chuyển sang DTO
         return issues.stream()
                 .map(issue -> {
-                    boolean isOwner = issue.getAssignee().equals(assignee);
+                    boolean isOwner = issue.getAssignee() != null && issue.getAssignee().equals(assignee);
 
-                    // Tạo đối tượng AssigneeResponse
-                    AssigneeResponse assigneeResponse = new AssigneeResponse(
-                            issue.getAssignee().getId(),
-                            issue.getAssignee().getFullname(),
-                            issue.getAssignee().getEmail(),
-                            issue.getAssignee().getAddress(),
-                            issue.getAssignee().getCreatedDate(),
-                            issue.getAssignee().getPhone(),
-                            issue.getAssignee().getCompany(),
-                            issue.getAssignee().getProgramerposition(),
-                            issue.getAssignee().getSelectedSkills(),
-                            issue.getAssignee().getIntroduce(),
-                            issue.getAssignee().getAvatar(),
-                            issue.getAssignee().getProjectSize()
-                    );
-                    /// Tạo đối tượng IssueResponse
+                    // Kiểm tra assignee nếu null, tạo thông tin mặc định
+                    AssigneeResponse assigneeResponse;
+                    if (issue.getAssignee() == null) {
+                        assigneeResponse = new AssigneeResponse(
+                                null, // ID null
+                                "Chưa phân công", // Fullname "Chưa phân công"
+                                "", // Email rỗng
+                                "", // Address rỗng
+                                null, // CreatedDate null
+                                "", // Phone rỗng
+                                "", // Company rỗng
+                                "", // Position rỗng
+                                null, // Skills rỗng
+                                "", // Introduce rỗng
+                                "", // Avatar rỗng
+                                0 // ProjectSize 0
+                        );
+                    } else {
+                        assigneeResponse = new AssigneeResponse(
+                                issue.getAssignee().getId(),
+                                issue.getAssignee().getFullname(),
+                                issue.getAssignee().getEmail(),
+                                issue.getAssignee().getAddress(),
+                                issue.getAssignee().getCreatedDate(),
+                                issue.getAssignee().getPhone(),
+                                issue.getAssignee().getCompany(),
+                                issue.getAssignee().getProgramerposition(),
+                                issue.getAssignee().getSelectedSkills(),
+                                issue.getAssignee().getIntroduce(),
+                                issue.getAssignee().getAvatar(),
+                                issue.getAssignee().getProjectSize()
+                        );
+                    }
+
+                    // Tạo đối tượng IssueResponseDTO từ dữ liệu nhiệm vụ và assignee
                     return new IssueResponseDTO(
                             issue.getId(),
                             issue.getTitle(),
@@ -400,20 +431,132 @@ public class IssueServiceImpl implements IssueService{
                             issue.getPrice(),
                             issue.getFinish(),
                             issue.getTags(),
-                            assigneeResponse,
+                            assigneeResponse, // Thêm assignee vào DTO
                             isOwner,
                             issue.getSalary(),
                             issue.getFileNames()
                     );
-                }).collect(Collectors.toList());
-//        return issueRepository.findByAssigneeAndDueDateBeforeAndStatusNot(assignee, currentDate, "Hoàn thành");
+                })
+                .collect(Collectors.toList());
     }
 
+
     @Override
-    public Issue updateDueDate(Long issueId, LocalDate dueDate) {
+    public Issue updateDueDate(User Owner, Long issueId, LocalDate dueDate) throws MessagingException {
         Issue issue = issueRepository.findById(issueId).orElseThrow(() -> new RuntimeException("Issue not found"));
+
+        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        String issueUrl = "https://react-js-frontend-pms-20-12-2024.vercel.app/project/" + issue.getProjectID() + "/issue/" + issue.getId();
+
+        Project project = issue.getProject();
+        if(!project.getOwner().equals(Owner)) {
+            String subject = "Yêu cầu phê duyệt gia hạn nhiệm vụ: " + issue.getTitle();
+
+
+
+//            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+//            String formattedDueDate = dateFormat.format(dueDate);
+//            String currentDueDate = dateFormat.format(issue.getDueDate());
+            String htmlBody =
+                    "<html>" +
+                            "<head>" +
+                            "<style>" +
+                            "body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }" +
+                            ".container { width: 100%; max-width: 600px; margin: 0 auto; }" +
+                            ".header { background-color: #f4f4f4; padding: 20px; text-align: center; }" +
+                            ".content { padding: 20px; }" +
+                            ".footer { background-color: #f4f4f4; padding: 10px; text-align: center; font-size: 12px; }" +
+                            "table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }" +
+                            "th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }" +
+                            "th { background-color: #f2f2f2; }" +
+                            "</style>" +
+                            "</head>" +
+                            "<body>" +
+                            "<div class='container'>" +
+                            "<div class='header'>" +
+                            "<h2>Yêu cầu gia hạn nhiệm vụ</h2>" +
+                            "</div>" +
+                            "<div class='content'>" +
+                            "<p>Kính gửi " + project.getOwner().getFullname() + ",</p>" +
+                            "<p>Tôi hy vọng email này tìm thấy bạn trong tình trạng tốt. " +
+                            "Tôi viết thư này để yêu cầu gia hạn thời gian cho nhiệm vụ sau:</p>" +
+                            "<table>" +
+                            "<tr><th>Tiêu đề nhiệm vụ</th><td>" + issue.getTitle() + "</td></tr>" +
+                            "<tr><th>Mã nhiệm vụ</th><td>" + " NV " + issue.getId() + "</td></tr>" +
+                            "<tr><th>Ngày đến hạn hiện tại</th><td>" + issue.getDueDate() + "</td></tr>" +
+                            "<tr><th>Ngày đến hạn đề xuất</th><td>" + dueDate + "</td></tr>" +
+                            "</table>" +
+                            "<p><strong>Lý do gia hạn:</strong> [Vui lòng điền lý do ở đây]</p>" +
+                            "<p>Tôi kính mong bạn xem xét yêu cầu này và phê duyệt gia hạn đến ngày " +
+                            dueDate + ". Nếu bạn cần thêm thông tin hoặc có bất kỳ câu hỏi nào, " +
+                            "xin vui lòng liên hệ với tôi.</p>" +
+                            "<p>Để xem chi tiết và phê duyệt yêu cầu, vui lòng nhấp vào nút bên dưới:</p>" +
+                            "<p style='text-align: center;'>" +
+                            "<a href='" + issueUrl + "' class='button'>Xem chi tiết nhiệm vụ</a>" +
+                            "</p>" +
+                            "<p>Cảm ơn bạn đã dành thời gian xem xét yêu cầu này.</p>" +
+                            "<p>Trân trọng,<br>" + Owner.getFullname() + "</p>" +
+                            "</div>" +
+                            "<div class='footer'>" +
+                            "Email này được gửi tự động từ hệ thống quản lý dự án. Vui lòng không trả lời email này." +
+                            "</div>" +
+                            "</div>" +
+                            "</body>" +
+                            "</html>";
+
+            emailUtill.sendEmail(project.getOwner().getEmail(), subject,htmlBody);
+            throw new RuntimeException("Bạn không có quyền chỉnh sửa");
+
+
+        }
         issue.setDueDate(dueDate);
+        Issue updatedIssue = issueRepository.save(issue);
+
+        String successSubject = "Nhiệm vụ đã được gia hạn: " + issue.getTitle();
+        String successHtmlBody =
+                "<html>" +
+                        "<head>" +
+                        "<style>" +
+                        "body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }" +
+                        ".container { width: 100%; max-width: 600px; margin: 0 auto; }" +
+                        ".header { background-color: #f4f4f4; padding: 20px; text-align: center; }" +
+                        ".content { padding: 20px; }" +
+                        ".footer { background-color: #f4f4f4; padding: 10px; text-align: center; font-size: 12px; }" +
+                        "table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }" +
+                        "th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }" +
+                        "th { background-color: #f2f2f2; }" +
+                        "</style>" +
+                        "</head>" +
+                        "<body>" +
+                        "<div class='container'>" +
+                        "<div class='header'>" +
+                        "<h2>Nhiệm vụ đã được gia hạn</h2>" +
+                        "</div>" +
+                        "<div class='content'>" +
+                        "<p>Kính gửi " + issue.getAssignee().getFullname() + ",</p>" +
+                        "<p>Chúng tôi muốn thông báo rằng nhiệm vụ sau đã được gia hạn:</p>" +
+                        "<table>" +
+                        "<tr><th>Tiêu đề nhiệm vụ</th><td>" + issue.getTitle() + "</td></tr>" +
+                        "<tr><th>Mã nhiệm vụ</th><td>" + " NV " + issue.getId() + "</td></tr>" +
+                        "<tr><th>Ngày đến hạn mới</th><td>" + dueDate + "</td></tr>" +
+                        "</table>" +
+                        "<p>Vui lòng tiếp tục theo dõi và hoàn thành nhiệm vụ trước ngày đến hạn mới.</p>" +
+                        "<p>Trân trọng,<br>Hệ thống quản lý dự án</p>" +
+                        "<a href='" + issueUrl + "' class='button'>Xem chi tiết nhiệm vụ</a>" +  // Thêm nút dẫn đến nhiệm vụ
+                        "</div>" +
+                        "<div class='footer'>" +
+                        "Email này được gửi tự động từ hệ thống quản lý dự án. Vui lòng không trả lời email này." +
+                        "</div>" +
+                        "</div>" +
+                        "</body>" +
+                        "</html>";
+
+        // Gửi email thông báo gia hạn thành công tới thành viên thực hiện nhiệm vụ
+        emailUtill.sendEmail(issue.getAssignee().getEmail(), successSubject, successHtmlBody);
         return issueRepository.save(issue);
+
+
     }
 
     @Override
