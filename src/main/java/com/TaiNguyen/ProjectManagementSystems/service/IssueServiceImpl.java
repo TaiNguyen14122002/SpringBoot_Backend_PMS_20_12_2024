@@ -105,8 +105,55 @@ public class IssueServiceImpl implements IssueService{
 
         issue.setStatus(status);
         issue.setActualDate(LocalDate.now());
-        return issueRepository.save(issue);
 
+        Issue updatedIssue = issueRepository.save(issue);
+        sendNotificationEmail(issue);
+        return updatedIssue;
+//        return issueRepository.save(issue);
+
+    }
+
+    private void sendNotificationEmail(Issue issue) throws Exception {
+        // Lấy thông tin Owner của Issue
+        User owner = issue.getProject().getOwner(); // Đảm bảo Issue có phương thức getOwner()
+
+        if (owner != null && owner.getEmail() != null) {
+            String subject = "Thông báo thay đổi trạng thái Issue";
+            String issueUrl = "https://react-js-frontend-pms-20-12-2024.vercel.app/project/" + issue.getProject().getId() + "issue/" + issue.getId(); // Giả định URL
+
+            String htmlContent =
+                    "<!DOCTYPE html>" +
+                            "<html lang='vi'>" +
+                            "<head>" +
+                            "    <meta charset='UTF-8'>" +
+                            "    <meta name='viewport' content='width=device-width, initial-scale=1.0'>" +
+                            "    <title>" + subject + "</title>" +
+                            "</head>" +
+                            "<body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;'>" +
+                            "    <div style='text-align: center; margin-bottom: 20px;'>" +
+                            "        <img src='https://your-company-logo.com/logo.png' alt='Logo Công ty' style='max-width: 150px;'>" +
+                            "    </div>" +
+                            "    <h1 style='color: #4a4a4a; text-align: center;'>" + subject + "</h1>" +
+                            "    <p>Chào <strong>" + owner.getFullname() + "</strong>,</p>" +
+                            "    <p>Trạng thái của Issue sau đã được cập nhật:</p>" +
+                            "    <div style='background-color: #f9f9f9; border-left: 4px solid #5c6bc0; padding: 15px; margin: 20px 0;'>" +
+                            "        <p><strong>Tiêu đề:</strong> " + issue.getTitle() + "</p>" +
+                            "        <p><strong>ID:</strong> " + issue.getId() + "</p>" +
+                            "        <p><strong>Trạng thái mới:</strong> <span style='color: #4caf50; font-weight: bold;'>" + issue.getStatus() + "</span></p>" +
+                            "        <p><strong>Ngày thực tế:</strong> " + issue.getActualDate() + "</p>" +
+                            "    </div>" +
+                            "    <div style='text-align: center; margin-top: 30px;'>" +
+                            "        <a href='" + issueUrl + "' style='background-color: #5c6bc0; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;'>Xem chi tiết Issue</a>" +
+                            "    </div>" +
+                            "    <p style='margin-top: 30px; text-align: center; color: #888;'>Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi.</p>" +
+                            "</body>" +
+                            "</html>";
+
+            // Sử dụng EmailUtil hoặc EmailService để gửi email
+            emailUtill.sendEmail(owner.getEmail(), subject, htmlContent);
+        } else {
+            throw new Exception("Không thể gửi email. Chủ dự án hoặc email không tồn tại.");
+        }
     }
 
     @Override
